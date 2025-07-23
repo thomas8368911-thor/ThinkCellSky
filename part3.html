@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOEIC Part 3 模擬測驗</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #f0f4f8;
+            color: #334155;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            margin-top: 20px; /* Add some margin from the top */
+        }
+        .question-option {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+        }
+        .question-option:hover:not(.disabled) {
+            background-color: #e0f2fe;
+            border-color: #90cdf4;
+        }
+        .question-option.selected {
+            background-color: #bfdbfe;
+            border-color: #60a5fa;
+            font-weight: bold;
+        }
+        .question-option.correct {
+            background-color: #d1fae5;
+            border-color: #34d399;
+            font-weight: bold;
+        }
+        .question-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            font-weight: bold;
+        }
+        .question-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .explanation-section {
+            background-color: #f0f9ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+            margin-left: auto;
+            margin-right: auto;
+            text-align: left;
+        }
+        .explanation-section h3 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        .explanation-section p {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        .button-primary, .button-secondary, .button-play-audio, .button-next-part {
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+        }
+        .button-primary:hover:not(.disabled) {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .button-secondary {
+            background-color: #6b7280;
+        }
+        .button-secondary:hover:not(.disabled) {
+            background-color: #4b5563;
+        }
+        .button-play-audio {
+            background-color: #10b981; /* Green */
+        }
+        .button-play-audio:hover:not(.disabled) {
+            background-color: #059669;
+        }
+        .button-next-part {
+            background-color: #f97316; /* Orange */
+        }
+        .button-next-part:hover:not(.disabled) {
+            background-color: #ea580c;
+        }
+        .button-primary.disabled, .button-secondary.disabled, .button-play-audio.disabled, .button-next-part.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+        }
+        .conversation-transcript {
+            background-color: #e0f7fa; /* Light blue background for transcript */
+            border: 1px solid #80deea;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-style: italic;
+            color: #006064;
+            display: none; /* Hidden by default, shown in explanation */
+        }
+        .question-text-display {
+            background-color: #f3f9f9; /* Slightly different background for question text */
+            border: 1px solid #cce5e5;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            color: #333;
+            display: none; /* Hidden during test, shown in explanation */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-6">TOEIC Part 3 模擬測驗</h1>
+
+        <div id="test-area">
+            <h2 class="text-2xl font-bold text-gray-700 mb-6 text-center">Part 3: Conversations (簡短對話)</h2>
+
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-lg font-semibold text-gray-700">
+                    問題 <span id="current-question-number">1</span> / <span id="total-questions">39</span>
+                </span>
+                <div class="flex gap-2">
+                    <button id="play-conversation-btn" class="button-play-audio">播放對話</button>
+                    <button id="play-question-btn" class="button-play-audio">播放問題</button>
+                    <button id="play-options-btn" class="button-play-audio">播放選項</button>
+                </div>
+            </div>
+
+            <!-- Conversation Transcript (hidden during test, shown in explanation) -->
+            <div id="conversation-transcript-display" class="conversation-transcript">
+                <p id="conversation-text-content" class="text-gray-800"></p>
+            </div>
+
+            <!-- Question Text Display (hidden during test, shown in explanation) -->
+            <div id="question-text-display" class="question-text-display">
+                <p id="question-text-content" class="text-gray-800"></p>
+            </div>
+
+            <!-- Options -->
+            <div id="options-container" class="mb-8">
+                <!-- Options will be dynamically loaded here -->
+            </div>
+
+            <!-- Navigation and Action Buttons -->
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
+                <button id="prev-btn" class="button-secondary" style="display: none;">上一題</button>
+                <button id="submit-answer-btn" class="button-primary">提交答案</button>
+                <button id="show-explanation-btn" class="button-secondary" style="display: none;">查看詳解</button>
+                <button id="next-btn" class="button-primary" style="display: none;">下一題</button>
+            </div>
+
+            <!-- Explanation Section -->
+            <div id="explanation-display" class="explanation-section">
+                <h3 class="text-xl font-bold mb-3">詳解</h3>
+                <h4 class="text-lg font-semibold text-blue-800 mb-2">官方解析：</h4>
+                <p id="official-explanation" class="text-gray-700 mb-4"></p>
+                <h4 class="text-lg font-semibold text-blue-800 mb-2">詞彙補充：</h4>
+                <p id="vocabulary-explanation" class="text-gray-700 mb-4"></p>
+                <h4 class="text-lg font-semibold text-blue-800 mb-2">選項分析：</h4>
+                <p id="analysis-explanation" class="text-gray-700 mb-4"></p>
+            </div>
+
+            <!-- Status Message -->
+            <div id="status-message" class="status-message" style="display: none;"></div>
+        </div>
+
+        <div id="completion-area" class="text-center mt-10 p-8 bg-blue-50 rounded-lg shadow-inner" style="display: none;">
+            <h2 class="text-3xl font-bold text-blue-800 mb-4">Part 3 測驗完成！</h2>
+            <p class="text-xl text-gray-700 mb-6">您已完成所有 Part 3 題目。</p>
+            <button id="next-part-btn" class="button-next-part text-lg px-6 py-3 mr-4">前往 Part 4</button>
+            <button id="restart-test-btn" class="button-secondary text-lg px-6 py-3">重新開始 Part 3</button>
+        </div>
+    </div>
+
+    <script>
+        // Global state variables
+        let currentQuestionIndex = 0; // Tracks the current individual question (0-38 for Part 3)
+        // Corrected userAnswers array size calculation
+        const totalQuestionsCount = 39; // Explicitly set total questions for Part 3
+        let userAnswers = new Array(totalQuestionsCount).fill(null); // Stores user's selected option text
+        let isExplanationMode = false; // Flag to indicate if explanation is being shown
+        let speechUtterance = null;
+        let isSpeaking = false;
+        let currentOptionIndex = 0; // To track which option is being spoken for sequential playback
+
+        // All TOEIC Part 3 Questions (13 conversation groups, 3 questions each = 39 questions)
+        const allQuestions = [
+            {
+                id: "P3-C01", part: 3, type: "Conversation",
+                conversationAudioText: "Woman: Excuse me, I'm looking for a gift for my colleague. Do you have any recommendations?\nMan: Certainly! What kind of interests does your colleague have?\nWoman: She's very interested in technology and gadgets.\nMan: In that case, I'd suggest our new smart speaker. It has excellent sound quality and integrates with most smart home systems.",
+                questions: [
+                    {
+                        questionId: "P3-Q01",
+                        questionAudioText: "What is the woman looking for?",
+                        questionText: "What is the woman looking for?",
+                        optionsAudioText: [
+                            "A new smart home system.",
+                            "A gift for a colleague.",
+                            "A technology recommendation.",
+                            "A new gadget for herself."
+                        ],
+                        correctAnswerText: "A gift for a colleague.",
+                        explanation: {
+                            official: "對話開頭女士就說 'I'm looking for a gift for my colleague.'，明確表示她在為同事找禮物。",
+                            vocabulary: "colleague (同事), recommendations (推薦), gadgets (小裝置), smart speaker (智能音箱), integrates (整合).",
+                            analysis: "選項 A、C 是對話中提到的相關內容，但不是女士尋找的主要目的。選項 D 則完全不符。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q02",
+                        questionAudioText: "What is the colleague interested in?",
+                        questionText: "What is the colleague interested in?",
+                        optionsAudioText: [
+                            "Sound quality.",
+                            "Smart home systems.",
+                            "Technology and gadgets.",
+                            "Gift recommendations."
+                        ],
+                        correctAnswerText: "Technology and gadgets.",
+                        explanation: {
+                            official: "女士提到 'She's very interested in technology and gadgets.'，指出了同事的興趣。",
+                            vocabulary: "interested in (對...感興趣), technology (科技), gadgets (小裝置).",
+                            analysis: "選項 A 和 B 是男士推薦的產品特點，不是同事的興趣。選項 D 是女士的行為，不是同事的興趣。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q03",
+                        questionAudioText: "What does the man suggest?",
+                        questionText: "What does the man suggest?",
+                        optionsAudioText: [
+                            "A new phone.",
+                            "A smart speaker.",
+                            "A sound system.",
+                            "A home integration kit."
+                        ],
+                        correctAnswerText: "A smart speaker.",
+                        explanation: {
+                            official: "男士說 'I'd suggest our new smart speaker.'，明確推薦了智能音箱。",
+                            vocabulary: "suggest (建議), smart speaker (智能音箱), excellent (極好的), sound quality (音質).",
+                            analysis: "選項 A、C、D 都是相關產品，但男士明確推薦的是智能音箱。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P3-C02", part: 3, type: "Conversation",
+                conversationAudioText: "Man: Good morning, Ms. Chen. I'm calling to confirm your appointment for tomorrow at 10 AM.\nWoman: Oh, thank you for calling. I completely forgot about that. Is it still possible to reschedule?\nMan: Let me check. What time would be better for you?\nWoman: Could we make it later in the afternoon, perhaps around 2 PM?",
+                questions: [
+                    {
+                        questionId: "P3-Q04",
+                        questionAudioText: "What is the purpose of the man's call?",
+                        questionText: "What is the purpose of the man's call?",
+                        optionsAudioText: [
+                            "To make a new appointment.",
+                            "To confirm an appointment.",
+                            "To reschedule a meeting.",
+                            "To remind Ms. Chen about a payment."
+                        ],
+                        correctAnswerText: "To confirm an appointment.",
+                        explanation: {
+                            official: "男士說 'I'm calling to confirm your appointment for tomorrow at 10 AM.'，表明電話目的是確認預約。",
+                            vocabulary: "confirm (確認), appointment (預約), reschedule (重新安排).",
+                            analysis: "選項 A 和 C 是女士的意圖，不是男士打電話的目的。選項 D 未在對話中提及。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q05",
+                        questionAudioText: "What does Ms. Chen want to do?",
+                        questionText: "What does Ms. Chen want to do?",
+                        optionsAudioText: [
+                            "Cancel the appointment.",
+                            "Change the appointment time.",
+                            "Confirm the appointment.",
+                            "Forget about the appointment."
+                        ],
+                        correctAnswerText: "Change the appointment time.",
+                        explanation: {
+                            official: "女士說 'Is it still possible to reschedule?'，表示她想重新安排預約時間。",
+                            vocabulary: "reschedule (重新安排), possible (可能的), afternoon (下午).",
+                            analysis: "選項 A 是取消，與重新安排不同。選項 C 是男士的目的。選項 D 是女士的疏忽，不是她的意圖。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q06",
+                        questionAudioText: "When does Ms. Chen want to reschedule the appointment?",
+                        questionText: "When does Ms. Chen want to reschedule the appointment?",
+                        optionsAudioText: [
+                            "Tomorrow morning.",
+                            "Tomorrow afternoon.",
+                            "Next week.",
+                            "Today."
+                        ],
+                        correctAnswerText: "Tomorrow afternoon.",
+                        explanation: {
+                            official: "女士說 'Could we make it later in the afternoon, perhaps around 2 PM?'，表明她想改到明天下午。",
+                            vocabulary: "later (稍後), afternoon (下午), perhaps (或許).",
+                            analysis: "對話明確提到了下午 2 點左右，這屬於下午時段。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P3-C03", part: 3, type: "Conversation",
+                conversationAudioText: "Woman: The new project proposal looks promising, but I'm concerned about the budget.\nMan: I understand your concern. I've already spoken with the finance department, and they assured me we have enough funds.\nWoman: That's good to hear. What about the timeline? Can we realistically complete it by the end of the quarter?\nMan: We'll need to optimize our workflow, but I believe it's achievable with some focused effort.",
+                questions: [
+                    {
+                        questionId: "P3-Q07",
+                        questionAudioText: "What is the woman concerned about initially?",
+                        questionText: "What is the woman concerned about initially?",
+                        optionsAudioText: [
+                            "The project timeline.",
+                            "The project proposal.",
+                            "The budget.",
+                            "The finance department."
+                        ],
+                        correctAnswerText: "The budget.",
+                        explanation: {
+                            official: "女士說 'I'm concerned about the budget.'，明確表示她最初擔心的是預算。",
+                            vocabulary: "proposal (提案), promising (有希望的), concerned about (擔心), budget (預算), finance department (財務部門), assured (保證).",
+                            analysis: "選項 A 是女士後來提出的問題，不是最初的擔憂。選項 B 是對話的主題，不是擔憂的內容。選項 D 是男士溝通的對象，不是擔憂的內容。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q08",
+                        questionAudioText: "What did the man do to address the concern?",
+                        questionText: "What did the man do to address the concern?",
+                        optionsAudioText: [
+                            "He spoke with the woman.",
+                            "He adjusted the timeline.",
+                            "He spoke with the finance department.",
+                            "He optimized the workflow."
+                        ],
+                        correctAnswerText: "He spoke with the finance department.",
+                        explanation: {
+                            official: "男士說 'I've already spoken with the finance department, and they assured me we have enough funds.'，表明他聯繫了財務部門來解決預算問題。",
+                            vocabulary: "address (處理), funds (資金), timeline (時間表), optimize (優化), workflow (工作流程), achievable (可實現的).",
+                            analysis: "選項 A 正在發生，但不是解決問題的具體行動。選項 B 和 D 是針對時間線問題的潛在行動，不是針對預算問題的行動。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q09",
+                        questionAudioText: "What does the man say about the timeline?",
+                        questionText: "What does the man say about the timeline?",
+                        optionsAudioText: [
+                            "It's too short.",
+                            "It's flexible.",
+                            "It's achievable with effort.",
+                            "It needs to be extended."
+                        ],
+                        correctAnswerText: "It's achievable with effort.",
+                        explanation: {
+                            official: "男士說 'We'll need to optimize our workflow, but I believe it's achievable with some focused effort.'，表示時間線是可實現的，但需要努力。",
+                            vocabulary: "achievable (可實現的), focused effort (集中精力).",
+                            analysis: "選項 A 和 D 與男士的樂觀態度不符。選項 B 未在對話中提及。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P3-C04", part: 3, type: "Conversation",
+                conversationAudioText: "Man: I'm having trouble connecting to the Wi-Fi in my room.\nWoman: I apologize for the inconvenience. Let me check the system for you. What's your room number?\nMan: It's 405.\nWoman: Okay, it seems there's a temporary outage on your floor. Our technicians are working on it, and it should be resolved within the hour.",
+                questions: [
+                    {
+                        questionId: "P3-Q10",
+                        questionAudioText: "What problem is the man experiencing?",
+                        questionText: "What problem is the man experiencing?",
+                        optionsAudioText: [
+                            "His room key isn't working.",
+                            "He can't connect to the internet.",
+                            "His phone battery is low.",
+                            "The television is not working."
+                        ],
+                        correctAnswerText: "He can't connect to the internet.",
+                        explanation: {
+                            official: "男士說 'I'm having trouble connecting to the Wi-Fi in my room.'，表明他無法連接網路。",
+                            vocabulary: "connecting to (連接到), Wi-Fi (無線網路), inconvenience (不便), temporary outage (暫時中斷), resolved (解決).",
+                            analysis: "選項 A、C、D 未在對話中提及。無法連接 Wi-Fi 等同於無法連接網路。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q11",
+                        questionAudioText: "What is the cause of the problem?",
+                        questionText: "What is the cause of the problem?",
+                        optionsAudioText: [
+                            "A power outage.",
+                            "A system error.",
+                            "A temporary outage on his floor.",
+                            "A broken router."
+                        ],
+                        correctAnswerText: "A temporary outage on his floor.",
+                        explanation: {
+                            official: "女士說 'it seems there's a temporary outage on your floor.'，指出了問題的原因是該樓層的暫時中斷。",
+                            vocabulary: "outage (中斷), technicians (技術人員), working on it (正在處理).",
+                            analysis: "選項 A 是泛指停電，對話中特指 Wi-Fi 中斷。選項 B 和 D 未在對話中提及。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q12",
+                        questionAudioText: "When will the problem most likely be fixed?",
+                        questionText: "When will the problem most likely be fixed?",
+                        optionsAudioText: [
+                            "By the end of the day.",
+                            "Within an hour.",
+                            "Tomorrow morning.",
+                            "After the technician arrives."
+                        ],
+                        correctAnswerText: "Within an hour.",
+                        explanation: {
+                            official: "女士說 'it should be resolved within the hour.'，表示問題應該在一小時內解決。",
+                            vocabulary: "resolved (解決), within the hour (一小時內).",
+                            analysis: "對話明確提到了時間，其他選項不符。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P3-C05", part: 3, type: "Conversation",
+                conversationAudioText: "Woman: I'm calling about the job advertisement for the marketing specialist position. Is it still open?\nMan: Yes, it is. We're still accepting applications. Have you submitted your resume?\nWoman: Not yet. I just wanted to clarify some of the requirements. Does the role require extensive travel?\nMan: It involves occasional travel, but not extensive. Perhaps a few times a year for conferences.",
+                questions: [
+                    {
+                        questionId: "P3-Q13",
+                        questionAudioText: "What is the woman inquiring about?",
+                        questionText: "What is the woman inquiring about?",
+                        optionsAudioText: [
+                            "A new product.",
+                            "A job advertisement.",
+                            "A marketing strategy.",
+                            "A travel itinerary."
+                        ],
+                        correctAnswerText: "A job advertisement.",
+                        explanation: {
+                            official: "女士說 'I'm calling about the job advertisement for the marketing specialist position.'，表明她在詢問職位廣告。",
+                            vocabulary: "inquiring about (詢問), job advertisement (職位廣告), marketing specialist (行銷專員), accepting applications (接受申請), resume (履歷).",
+                            analysis: "選項 A、C、D 未在對話中提及為主要詢問內容。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q14",
+                        questionAudioText: "What does the woman want to clarify?",
+                        questionText: "What does the woman want to clarify?",
+                        optionsAudioText: [
+                            "The application deadline.",
+                            "The salary expectations.",
+                            "The travel requirements.",
+                            "The interview process."
+                        ],
+                        correctAnswerText: "The travel requirements.",
+                        explanation: {
+                            official: "女士說 'I just wanted to clarify some of the requirements. Does the role require extensive travel?'，明確表示她想澄清旅行要求。",
+                            vocabulary: "clarify (澄清), requirements (要求), extensive travel (大量出差), occasional travel (偶爾出差), conferences (會議).",
+                            analysis: "選項 A、B、D 未在對話中提及為澄清內容。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q15",
+                        questionAudioText: "How much travel is involved in the role?",
+                        questionText: "How much travel is involved in the role?",
+                        optionsAudioText: [
+                            "A lot of travel.",
+                            "No travel at all.",
+                            "Occasional travel.",
+                            "Daily travel."
+                        ],
+                        correctAnswerText: "Occasional travel.",
+                        explanation: {
+                            official: "男士說 'It involves occasional travel, but not extensive. Perhaps a few times a year for conferences.'，表明是偶爾出差。",
+                            vocabulary: "occasional (偶爾的), extensive (大量的).",
+                            analysis: "選項 A 和 D 與男士的描述不符。選項 B 則完全否定了出差，也不符。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P3-C06", part: 3, type: "Conversation",
+                conversationAudioText: "Man: Ms. Davis, I've finished preparing the quarterly sales report. Would you like me to email it to you or print a hard copy?\nWoman: Thank you, Mark. An email would be fine. I'll review it on my tablet during my commute. Did you include the regional performance breakdown?\nMan: Yes, I've added a detailed section for each region, as requested.\nWoman: Excellent. I appreciate your thoroughness.",
+                questions: [
+                    {
+                        questionId: "P3-Q16",
+                        questionAudioText: "What has the man finished preparing?",
+                        questionText: "What has the man finished preparing?",
+                        optionsAudioText: [
+                            "A new product launch.",
+                            "A client presentation.",
+                            "A quarterly sales report.",
+                            "A regional performance review."
+                        ],
+                        correctAnswerText: "A quarterly sales report.",
+                        explanation: {
+                            official: "男士說 'I've finished preparing the quarterly sales report.'，明確表示他完成了季度銷售報告。",
+                            vocabulary: "quarterly (季度的), sales report (銷售報告), email (電子郵件), hard copy (紙本), review (審查), tablet (平板電腦), commute (通勤).",
+                            analysis: "選項 A、B、D 未在對話中提及為男士完成的內容。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q17",
+                        questionAudioText: "How does the woman want to receive the report?",
+                        questionText: "How does the woman want to receive the report?",
+                        optionsAudioText: [
+                            "By mail.",
+                            "As a hard copy.",
+                            "By email.",
+                            "In person."
+                        ],
+                        correctAnswerText: "By email.",
+                        explanation: {
+                            official: "女士說 'An email would be fine.'，表明她希望透過電子郵件接收報告。",
+                            vocabulary: "fine (可以的), detailed section (詳細部分), requested (要求), thoroughness (徹底).",
+                            analysis: "選項 B 是男士提供的另一種方式，但女士選擇了電子郵件。選項 A 和 D 未在對話中提及。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q18",
+                        questionAudioText: "What did the man include in the report?",
+                        questionText: "What did the man include in the report?",
+                        optionsAudioText: [
+                            "Customer feedback.",
+                            "Future sales projections.",
+                            "Regional performance breakdown.",
+                            "Marketing expenses."
+                        ],
+                        correctAnswerText: "Regional performance breakdown.",
+                        explanation: {
+                            official: "女士詢問 'Did you include the regional performance breakdown?'，男士回答 'Yes, I've added a detailed section for each region, as requested.'，表明他包含了地區業績分析。",
+                            vocabulary: "regional performance breakdown (地區業績分析).",
+                            analysis: "選項 A、B、D 未在對話中提及為報告內容。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P3-C07", part: 3, type: "Conversation",
+                conversationAudioText: "Woman: I'm having trouble with my new smartphone. The battery drains very quickly.\nMan: I see. Have you tried restarting it, or checking for any recent software updates?\nWoman: Yes, I've done both, but the problem persists. It's really inconvenient.\nMan: It sounds like a hardware issue. If you purchased it within the last year, it should still be under warranty. We can arrange a replacement for you.",
+                questions: [
+                    {
+                        questionId: "P3-Q19",
+                        questionAudioText: "What is the woman's problem?",
+                        questionText: "What is the woman's problem?",
+                        optionsAudioText: [
+                            "Her phone is too old.",
+                            "Her phone's battery drains quickly.",
+                            "She can't update her software.",
+                            "Her phone is restarting constantly."
+                        ],
+                        correctAnswerText: "Her phone's battery drains quickly.",
+                        explanation: {
+                            official: "女士說 'The battery drains very quickly.'，明確指出了她的問題是電池耗電快。",
+                            vocabulary: "smartphone (智能手機), battery drains (電池耗盡), quickly (快速地), restarting (重啟), software updates (軟體更新), persists (持續存在), inconvenient (不便的).",
+                            analysis: "選項 A、C、D 與對話內容不符。選項 B 直接呼應了女士的問題。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q20",
+                        questionAudioText: "What does the man suggest might be the cause?",
+                        questionText: "What does the man suggest might be the cause?",
+                        optionsAudioText: [
+                            "A software bug.",
+                            "A network issue.",
+                            "A hardware issue.",
+                            "User error."
+                        ],
+                        correctAnswerText: "A hardware issue.",
+                        explanation: {
+                            official: "男士說 'It sounds like a hardware issue.'，表明他認為是硬體問題。",
+                            vocabulary: "hardware issue (硬體問題), purchased (購買), warranty (保固), replacement (更換).",
+                            analysis: "選項 A 是男士排除的可能性。選項 B 和 D 未在對話中提及。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q21",
+                        questionText: "What does the man offer to do?",
+                        questionAudioText: "What does the man offer to do?",
+                        optionsAudioText: [
+                            "Help her update the software.",
+                            "Fix her phone immediately.",
+                            "Provide a new battery.",
+                            "Arrange a replacement."
+                        ],
+                        correctAnswerText: "Arrange a replacement.",
+                        explanation: {
+                            official: "男士說 'We can arrange a replacement for you.'，表示他可以安排更換。",
+                            vocabulary: "arrange (安排), replacement (更換).",
+                            analysis: "選項 A 和 B 與男士的建議不符。選項 C 未在對話中提及。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P3-C08", part: 3, type: "Conversation",
+                conversationAudioText: "Man: Excuse me, I'm trying to find the conference room for the morning session. I think it's Room 3B, but I'm not sure where that is.\nWoman: Oh, Room 3B is on the third floor, just down the hall from the elevators. You can't miss it.\nMan: Thank you so much! And what time does the session start?\nWoman: It's scheduled to begin at 9:00 AM sharp, so you still have about fifteen minutes.",
+                questions: [
+                    {
+                        questionId: "P3-Q22",
+                        questionAudioText: "What is the man looking for?",
+                        questionText: "What is the man looking for?",
+                        optionsAudioText: [
+                            "The elevator.",
+                            "The morning session.",
+                            "The conference room.",
+                            "The third floor."
+                        ],
+                        correctAnswerText: "The conference room.",
+                        explanation: {
+                            official: "男士說 'I'm trying to find the conference room for the morning session.'，表明他在找會議室。",
+                            vocabulary: "conference room (會議室), morning session (上午會議), down the hall (沿著走廊), elevators (電梯).",
+                            analysis: "選項 A 是女士指路時提到的地標。選項 B 是會議的名稱，不是男士尋找的實體地點。選項 D 是會議室所在的樓層，不是尋找的目標。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q23",
+                        questionAudioText: "Where is Room 3B located?",
+                        questionText: "Where is Room 3B located?",
+                        optionsAudioText: [
+                            "On the ground floor.",
+                            "Next to the stairs.",
+                            "On the third floor.",
+                            "Behind the elevators."
+                        ],
+                        correctAnswerText: "On the third floor.",
+                        explanation: {
+                            official: "女士說 'Room 3B is on the third floor, just down the hall from the elevators.'，明確指出了會議室在三樓。",
+                            vocabulary: "located (位於), third floor (三樓), sharp (準時).",
+                            analysis: "選項 A、B、D 與女士的描述不符。女士明確提到了 'third floor'。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q24",
+                        questionAudioText: "When is the session scheduled to begin?",
+                        questionText: "When is the session scheduled to begin?",
+                        optionsAudioText: [
+                            "At 8:45 AM.",
+                            "At 9:00 AM.",
+                            "At 9:15 AM.",
+                            "In fifteen minutes."
+                        ],
+                        correctAnswerText: "At 9:00 AM.",
+                        explanation: {
+                            official: "女士說 'It's scheduled to begin at 9:00 AM sharp.'，表明會議預計在上午 9:00 準時開始。",
+                            vocabulary: "scheduled to begin (預計開始), sharp (準時).",
+                            analysis: "選項 A 和 C 是基於 9:00 AM 的推測時間，但對話明確給出了開始時間。選項 D 是男士還有多少時間，不是開始時間。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P3-C09", part: 3, type: "Conversation",
+                conversationAudioText: "Woman: I'm calling to inquire about the status of my order, number 7890.\nMan: Let me check that for you. Order 7890. It shows it was shipped yesterday and is expected to arrive within three business days.\nWoman: Great, thank you. And will I receive a tracking number?\nMan: Yes, an email with the tracking information was sent to you shortly after shipment.",
+                questions: [
+                    {
+                        questionId: "P3-Q25",
+                        questionAudioText: "What is the woman calling about?",
+                        questionText: "What is the woman calling about?",
+                        optionsAudioText: [
+                            "A new product.",
+                            "A shipping delay.",
+                            "The status of her order.",
+                            "A tracking number."
+                        ],
+                        correctAnswerText: "The status of her order.",
+                        explanation: {
+                            official: "女士說 'I'm calling to inquire about the status of my order, number 7890.'，表明她打電話是詢問訂單狀態。",
+                            vocabulary: "inquire about (詢問), status (狀態), order (訂單), shipped (已發貨), expected to arrive (預計抵達), business days (工作日).",
+                            analysis: "選項 B 和 D 是對話中提到的相關細節，但不是打電話的主要目的。選項 A 未在對話中提及。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q26",
+                        questionAudioText: "When was the order shipped?",
+                        questionText: "When was the order shipped?",
+                        optionsAudioText: [
+                            "Today.",
+                            "Yesterday.",
+                            "Three business days ago.",
+                            "Next week."
+                        ],
+                        correctAnswerText: "Yesterday.",
+                        explanation: {
+                            official: "男士說 'It shows it was shipped yesterday...'，表明訂單是昨天發貨的。",
+                            vocabulary: "shipped (已發貨), tracking number (追蹤號碼), shortly after (不久之後), shipment (發貨).",
+                            analysis: "對話明確提到了發貨時間，其他選項不符。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q27",
+                        questionAudioText: "How will the woman receive the tracking number?",
+                        questionText: "How will the woman receive the tracking number?",
+                        optionsAudioText: [
+                            "By phone.",
+                            "By text message.",
+                            "By email.",
+                            "In person."
+                        ],
+                        correctAnswerText: "By email.",
+                        explanation: {
+                            official: "男士說 'Yes, an email with the tracking information was sent to you shortly after shipment.'，表明追蹤號碼已透過電子郵件發送。",
+                            vocabulary: "tracking information (追蹤資訊).",
+                            analysis: "對話明確提到了接收方式，其他選項不符。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P3-C10", part: 3, type: "Conversation",
+                conversationAudioText: "Man: Ms. Lee, your flight to Vancouver has been delayed by two hours due to unexpected weather conditions.\nWoman: Oh no, that's inconvenient. Will I still make my connecting flight to Toronto?\nMan: Let me check... It seems your connecting flight is also experiencing a delay, so you should have enough time. We apologize for the inconvenience.\nWoman: Thank you for checking. I appreciate the update.",
+                questions: [
+                    {
+                        questionId: "P3-Q28",
+                        questionAudioText: "What is the problem with Ms. Lee's flight?",
+                        questionText: "What is the problem with Ms. Lee's flight?",
+                        optionsAudioText: [
+                            "It has been cancelled.",
+                            "It has been overbooked.",
+                            "It has been delayed.",
+                            "It has been rerouted."
+                        ],
+                        correctAnswerText: "It has been delayed.",
+                        explanation: {
+                            official: "男士說 'your flight to Vancouver has been delayed by two hours...'，明確表示航班延誤。",
+                            vocabulary: "delayed (延誤), unexpected weather conditions (意外天氣狀況), inconvenient (不便), connecting flight (轉機航班), experiencing a delay (正在經歷延誤), apologize (道歉).",
+                            analysis: "選項 A、B、D 未在對話中提及。對話明確指出是延誤。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q29",
+                        questionAudioText: "What is the cause of the delay?",
+                        questionText: "What is the cause of the delay?",
+                        optionsAudioText: [
+                            "Mechanical issues.",
+                            "Air traffic control.",
+                            "Unexpected weather conditions.",
+                            "Late arrival of the aircraft."
+                        ],
+                        correctAnswerText: "Unexpected weather conditions.",
+                        explanation: {
+                            official: "男士說 'due to unexpected weather conditions.'，指出了延誤的原因是意外天氣狀況。",
+                            vocabulary: "unexpected weather conditions (意外天氣狀況).",
+                            analysis: "選項 A、B、D 未在對話中提及。對話明確指出了延誤原因。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q30",
+                        questionAudioText: "What is true about Ms. Lee's connecting flight?",
+                        questionText: "What is true about Ms. Lee's connecting flight?",
+                        optionsAudioText: [
+                            "It has already departed.",
+                            "It is also delayed.",
+                            "It is on time.",
+                            "It has been changed to a different gate."
+                        ],
+                        correctAnswerText: "It is also delayed.",
+                        explanation: {
+                            official: "男士說 'It seems your connecting flight is also experiencing a delay...'，表明她的轉機航班也延誤了。",
+                            vocabulary: "departed (已出發), on time (準時), gate (登機門).",
+                            analysis: "選項 A、C、D 與對話內容不符。對話明確指出轉機航班也延誤了。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P3-C11", part: 3, type: "Conversation",
+                conversationAudioText: "Woman: Mr. Kim, I've reviewed the sales figures for this quarter, and they look very positive. Our new product line is performing exceptionally well.\nMan: That's fantastic news, Ms. Park! I'm particularly impressed with the growth in the Asia market. What do you attribute this success to?\nWoman: I believe it's a combination of our aggressive marketing strategy and the strong demand for innovative solutions.\nMan: I agree. Let's plan a meeting to discuss scaling up production.",
+                questions: [
+                    {
+                        questionId: "P3-Q31",
+                        questionAudioText: "What is the woman reporting on?",
+                        questionText: "What is the woman reporting on?",
+                        optionsAudioText: [
+                            "New marketing strategies.",
+                            "Quarterly sales figures.",
+                            "Product development.",
+                            "Market research."
+                        ],
+                        correctAnswerText: "Quarterly sales figures.",
+                        explanation: {
+                            official: "女士說 'I've reviewed the sales figures for this quarter...'，表明她在報告季度銷售數據。",
+                            vocabulary: "sales figures (銷售數字), positive (積極的), performing exceptionally well (表現異常出色), impressed (印象深刻), attribute (歸因於), aggressive marketing strategy (積極行銷策略), demand (需求), innovative solutions (創新解決方案), scaling up production (擴大生產).",
+                            analysis: "選項 A、C、D 是相關業務領域，但不是女士報告的主要內容。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q32",
+                        questionAudioText: "What region is the man particularly impressed with?",
+                        questionText: "What region is the man particularly impressed with?",
+                        optionsAudioText: [
+                            "The European market.",
+                            "The North American market.",
+                            "The Asia market.",
+                            "The domestic market."
+                        ],
+                        correctAnswerText: "The Asia market.",
+                        explanation: {
+                            official: "男士說 'I'm particularly impressed with the growth in the Asia market.'，明確表示他對亞洲市場的增長印象深刻。",
+                            vocabulary: "growth (增長).",
+                            analysis: "對話明確提到了地區，其他選項不符。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q33",
+                        questionAudioText: "What do they plan to discuss next?",
+                        questionText: "What do they plan to discuss next?",
+                        optionsAudioText: [
+                            "New product ideas.",
+                            "Expanding the marketing team.",
+                            "Scaling up production.",
+                            "Analyzing more sales data."
+                        ],
+                        correctAnswerText: "Scaling up production.",
+                        explanation: {
+                            official: "男士說 'Let's plan a meeting to discuss scaling up production.'，表明他們計劃討論擴大生產。",
+                            vocabulary: "discuss (討論), scaling up production (擴大生產).",
+                            analysis: "選項 A、B、D 是相關業務活動，但不是他們明確計劃下一步討論的內容。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P3-C12", part: 3, type: "Conversation",
+                conversationAudioText: "Man: Excuse me, I'd like to return this jacket. I bought it last week, but it's too small.\nWoman: Certainly, sir. Do you have the original receipt and tags?\nMan: Yes, here they are.\nWoman: Perfect. Would you like a different size, or would you prefer a refund?",
+                questions: [
+                    {
+                        questionId: "P3-Q34",
+                        questionAudioText: "What is the man trying to do?",
+                        questionText: "What is the man trying to do?",
+                        optionsAudioText: [
+                            "Exchange a jacket.",
+                            "Buy a new jacket.",
+                            "Return a jacket.",
+                            "Complain about a jacket."
+                        ],
+                        correctAnswerText: "Return a jacket.",
+                        explanation: {
+                            official: "男士說 'I'd like to return this jacket.'，明確表示他想退貨。",
+                            vocabulary: "return (退貨), jacket (夾克), too small (太小), original receipt (原始收據), tags (標籤), refund (退款).",
+                            analysis: "選項 A 是退貨後的一種可能選擇，但主要目的是退貨。選項 B 和 D 不符對話內容。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q35",
+                        questionAudioText: "What does the woman ask for?",
+                        questionText: "What does the woman ask for?",
+                        optionsAudioText: [
+                            "His ID.",
+                            "The original receipt and tags.",
+                            "A reason for the return.",
+                            "The jacket's size."
+                        ],
+                        correctAnswerText: "The original receipt and tags.",
+                        explanation: {
+                            official: "女士說 'Do you have the original receipt and tags?'，表明她要求原始收據和標籤。",
+                            vocabulary: "original receipt (原始收據), tags (標籤).",
+                            analysis: "選項 A、C、D 未在對話中提及。女士明確要求了收據和標籤。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q36",
+                        questionAudioText: "What options does the woman offer?",
+                        questionText: "What options does the woman offer?",
+                        optionsAudioText: [
+                            "A store credit or a new item.",
+                            "A different color or a refund.",
+                            "A different size or a refund.",
+                            "An exchange or a discount."
+                        ],
+                        correctAnswerText: "A different size or a refund.",
+                        explanation: {
+                            official: "女士說 'Would you like a different size, or would you prefer a refund?'，表明她提供了不同尺寸或退款的選項。",
+                            vocabulary: "different size (不同尺寸), prefer (偏好), refund (退款).",
+                            analysis: "選項 A、B、D 與女士提供的具體選項不符。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P3-C13", part: 3, type: "Conversation",
+                conversationAudioText: "Man: Good afternoon. I'm interested in renting a car for a week, starting next Monday.\nWoman: Certainly, sir. What type of vehicle are you looking for? We have sedans, SUVs, and vans.\nMan: I'd prefer something economical, perhaps a compact car.\nWoman: Okay, let me check availability for you. Do you need unlimited mileage?",
+                questions: [
+                    {
+                        questionId: "P3-Q37",
+                        questionAudioText: "What is the man interested in?",
+                        questionText: "What is the man interested in?",
+                        optionsAudioText: [
+                            "Buying a car.",
+                            "Renting a car.",
+                            "Selling a car.",
+                            "Repairing a car."
+                        ],
+                        correctAnswerText: "Renting a car.",
+                        explanation: {
+                            official: "男士說 'I'm interested in renting a car for a week...'，明確表示他想租車。",
+                            vocabulary: "renting a car (租車), type of vehicle (車輛類型), sedans (轎車), SUVs (運動型多功能車), vans (廂型車), economical (經濟的), compact car (小型車), availability (可用性), unlimited mileage (無限里程).",
+                            analysis: "選項 A、C、D 與對話內容不符。男士明確表示是租車。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q38",
+                        questionAudioText: "When does the man want to rent the car?",
+                        questionText: "When does the man want to rent the car?",
+                        optionsAudioText: [
+                            "This weekend.",
+                            "Next Monday.",
+                            "Today.",
+                            "Next month."
+                        ],
+                        correctAnswerText: "Next Monday.",
+                        explanation: {
+                            official: "男士說 'starting next Monday.'，表明他想從下週一開始租車。",
+                            vocabulary: "starting (開始).",
+                            analysis: "對話明確提到了開始時間，其他選項不符。"
+                        }
+                    },
+                    {
+                        questionId: "P3-Q39",
+                        questionAudioText: "What type of car does the man prefer?",
+                        questionText: "What type of car does the man prefer?",
+                        optionsAudioText: [
+                            "An SUV.",
+                            "A van.",
+                            "An economical car.",
+                            "A luxury car."
+                        ],
+                        correctAnswerText: "An economical car.",
+                        explanation: {
+                            official: "男士說 'I'd prefer something economical, perhaps a compact car.'，表明他偏好經濟型車輛。",
+                            vocabulary: "prefer (偏好), economical (經濟的), compact car (小型車).",
+                            analysis: "選項 A 和 B 是女士提到的車型，但不是男士偏好的。選項 D 與男士的偏好相反。"
+                        }
+                    }
+                ]
+            }
+        ];
+
+        // DOM Elements
+        const currentQuestionNumberSpan = document.getElementById('current-question-number');
+        const totalQuestionsSpan = document.getElementById('total-questions');
+        const playConversationBtn = document.getElementById('play-conversation-btn');
+        const playQuestionBtn = document.getElementById('play-question-btn');
+        const playOptionsBtn = document.getElementById('play-options-btn');
+        const conversationTranscriptDisplay = document.getElementById('conversation-transcript-display');
+        const conversationTextContent = document.getElementById('conversation-text-content');
+        const questionTextDisplay = document.getElementById('question-text-display');
+        const questionTextContent = document.getElementById('question-text-content');
+        const optionsContainer = document.getElementById('options-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitAnswerBtn = document.getElementById('submit-answer-btn');
+        const showExplanationBtn = document.getElementById('show-explanation-btn');
+        const explanationDisplay = document.getElementById('explanation-display');
+        const officialExplanation = document.getElementById('official-explanation');
+        const vocabularyExplanation = document.getElementById('vocabulary-explanation');
+        const analysisExplanation = document.getElementById('analysis-explanation');
+        const statusMessage = document.getElementById('status-message');
+        const testArea = document.getElementById('test-area');
+        const completionArea = document.getElementById('completion-area');
+        const restartTestBtn = document.getElementById('restart-test-btn');
+        const nextPartBtn = document.getElementById('next-part-btn');
+
+        // Initialize total questions display
+        totalQuestionsSpan.textContent = allQuestions.reduce((acc, conv) => acc + conv.questions.length, 0); // Correctly 39
+
+        // --- Helper to toggle button/option disabled state ---
+        function setInteractionState(disabled) {
+            const buttons = [playConversationBtn, playQuestionBtn, playOptionsBtn, submitAnswerBtn, prevBtn, nextBtn, showExplanationBtn, restartTestBtn, nextPartBtn];
+            buttons.forEach(btn => {
+                if (btn) {
+                    btn.disabled = disabled;
+                    btn.classList.toggle('disabled', disabled);
+                }
+            });
+            
+            optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => {
+                if (disabled) {
+                    optionDiv.classList.add('disabled');
+                    optionDiv.querySelector('input[type="radio"]').disabled = true;
+                } else {
+                    if (submitAnswerBtn.style.display === 'block' && !isExplanationMode) {
+                        optionDiv.classList.remove('disabled');
+                        optionDiv.querySelector('input[type="radio"]').disabled = false;
+                    } else {
+                        optionDiv.classList.add('disabled');
+                        optionDiv.querySelector('input[type="radio"]').disabled = true;
+                    }
+                }
+            });
+        }
+
+        // --- Speech Synthesis (TTS) Functionality ---
+        function speakText(text, onEndCallback = null, buttonType = null) {
+            if (!('speechSynthesis' in window)) {
+                showStatusMessage('您的瀏覽器不支持語音合成功能。', 'error');
+                return;
+            }
+
+            window.speechSynthesis.cancel();
+            setInteractionState(true);
+
+            speechUtterance = new SpeechSynthesisUtterance(text);
+            speechUtterance.lang = 'en-US';
+
+            speechUtterance.onstart = () => {
+                isSpeaking = true;
+                if (buttonType === 'conversation') {
+                    playConversationBtn.textContent = '停止播放對話';
+                    playConversationBtn.classList.add('bg-red-500', 'hover:bg-red-700');
+                    playConversationBtn.classList.remove('bg-green-500', 'hover:bg-green-700');
+                } else if (buttonType === 'question') {
+                    playQuestionBtn.textContent = '停止播放問題';
+                    playQuestionBtn.classList.add('bg-red-500', 'hover:bg-red-700');
+                    playQuestionBtn.classList.remove('bg-green-500', 'hover:bg-green-700');
+                } else if (buttonType === 'option') {
+                    playOptionsBtn.textContent = `停止播放選項 (${String.fromCharCode(65 + currentOptionIndex)})`;
+                    playOptionsBtn.classList.add('bg-red-500', 'hover:bg-red-700');
+                    playOptionsBtn.classList.remove('bg-green-500', 'hover:bg-green-700');
+                }
+            };
+
+            speechUtterance.onend = () => {
+                isSpeaking = false;
+                // Reset all play buttons
+                playConversationBtn.textContent = '播放對話';
+                playConversationBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                playConversationBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+
+                playQuestionBtn.textContent = '播放問題';
+                playQuestionBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                playQuestionBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+
+                playOptionsBtn.textContent = '播放選項';
+                playOptionsBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                playOptionsBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+
+                currentOptionIndex = 0; // Reset for next play
+
+                if (onEndCallback) {
+                    onEndCallback();
+                } else {
+                    if (submitAnswerBtn.style.display === 'block') { // If submit button is visible, means not submitted yet
+                        setInteractionState(false); // Re-enable all if not submitted
+                    } else { // If submitted, re-enable only relevant buttons (options remain disabled)
+                        playConversationBtn.disabled = false; playConversationBtn.classList.remove('disabled');
+                        playQuestionBtn.disabled = false; playQuestionBtn.classList.remove('disabled');
+                        playOptionsBtn.disabled = false; playOptionsBtn.classList.remove('disabled');
+                        prevBtn.disabled = false; prevBtn.classList.remove('disabled');
+                        nextBtn.disabled = false; nextBtn.classList.remove('disabled');
+                        showExplanationBtn.disabled = false; showExplanationBtn.classList.remove('disabled');
+                        restartTestBtn.disabled = false; restartTestBtn.classList.remove('disabled');
+                        nextPartBtn.disabled = false; nextPartBtn.classList.remove('disabled');
+                    }
+                }
+            };
+
+            speechUtterance.onerror = (event) => {
+                console.error('Speech synthesis error:', event.error);
+                showStatusMessage('語音播放失敗，請檢查瀏覽器設定或網路連線。', 'error');
+                isSpeaking = false;
+                // Reset all play buttons and re-enable interactions on error
+                playConversationBtn.textContent = '播放對話';
+                playConversationBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                playConversationBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+
+                playQuestionBtn.textContent = '播放問題';
+                playQuestionBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                playQuestionBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+
+                playOptionsBtn.textContent = '播放選項';
+                playOptionsBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                playOptionsBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+                
+                currentOptionIndex = 0;
+                if (submitAnswerBtn.style.display === 'block') {
+                    setInteractionState(false);
+                } else {
+                    setInteractionState(false);
+                    optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
+                    optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.add('disabled'));
+                }
+            };
+
+            window.speechSynthesis.speak(speechUtterance);
+        }
+
+        playConversationBtn.addEventListener('click', () => {
+            if (isSpeaking) {
+                window.speechSynthesis.cancel();
+            } else {
+                const { conversationGroup, questionInGroupIndex } = getQuestionDataByIndex(currentQuestionIndex);
+                if (conversationGroup) {
+                    speakText(conversationGroup.conversationAudioText, null, 'conversation');
+                }
+            }
+        });
+
+        playQuestionBtn.addEventListener('click', () => {
+            if (isSpeaking) {
+                window.speechSynthesis.cancel();
+            } else {
+                const { conversationGroup, questionInGroupIndex, currentQuestionData } = getQuestionDataByIndex(currentQuestionIndex);
+                if (currentQuestionData) {
+                    speakText(currentQuestionData.questionAudioText, null, 'question');
+                }
+            }
+        });
+
+        playOptionsBtn.addEventListener('click', () => {
+            if (isSpeaking) {
+                window.speechSynthesis.cancel();
+            } else {
+                const { conversationGroup, questionInGroupIndex, currentQuestionData } = getQuestionDataByIndex(currentQuestionIndex);
+                if (currentQuestionData) {
+                    const options = currentQuestionData.optionsAudioText;
+                    const speakNextOption = () => {
+                        if (currentOptionIndex < options.length) {
+                            const spokenText = `${String.fromCharCode(65 + currentOptionIndex)}. ${options[currentOptionIndex]}`;
+                            speakText(spokenText, () => {
+                                currentOptionIndex++;
+                                speakNextOption();
+                            }, 'option');
+                        } else {
+                            isSpeaking = false;
+                            playOptionsBtn.textContent = '播放選項';
+                            playOptionsBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                            playOptionsBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+                            currentOptionIndex = 0;
+                            if (submitAnswerBtn.style.display === 'block') {
+                                setInteractionState(false);
+                            } else {
+                                setInteractionState(false);
+                                optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
+                                optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.add('disabled'));
+                            }
+                        }
+                    };
+                    currentOptionIndex = 0;
+                    speakNextOption();
+                }
+            }
+        });
+
+        // Helper to get question data based on linear index
+        function getQuestionDataByIndex(linearIndex) {
+            let absoluteQuestionCount = 0;
+            for (let i = 0; i < allQuestions.length; i++) {
+                const conversationGroup = allQuestions[i];
+                const numQuestionsInGroup = conversationGroup.questions.length;
+
+                if (linearIndex >= absoluteQuestionCount && linearIndex < absoluteQuestionCount + numQuestionsInGroup) {
+                    const questionInGroupIndex = linearIndex - absoluteQuestionCount;
+                    return {
+                        conversationGroup: conversationGroup,
+                        questionInGroupIndex: questionInGroupIndex,
+                        currentQuestionData: conversationGroup.questions[questionInGroupIndex]
+                    };
+                }
+                absoluteQuestionCount += numQuestionsInGroup;
+            }
+            return { conversationGroup: null, questionInGroupIndex: -1, currentQuestionData: null };
+        }
+
+        // --- Core Test Logic ---
+        function loadQuestion() {
+            hideStatusMessage();
+            explanationDisplay.style.display = 'none'; // Hide explanation
+            showExplanationBtn.style.display = 'none'; // Hide explanation button initially
+            submitAnswerBtn.style.display = 'block'; // Show submit button
+            setInteractionState(false); // Enable all interactions for new question
+
+            const { conversationGroup, questionInGroupIndex, currentQuestionData } = getQuestionDataByIndex(currentQuestionIndex);
+
+            if (!conversationGroup || !currentQuestionData) {
+                console.error("Question data not found for index:", currentQuestionIndex);
+                return;
+            }
+
+            currentQuestionNumberSpan.textContent = currentQuestionIndex + 1;
+            
+            // Hide conversation transcript during test
+            conversationTranscriptDisplay.style.display = 'none';
+            conversationTextContent.textContent = '';
+
+            // Display question text (always visible for Part 3)
+            questionTextContent.textContent = currentQuestionData.questionText;
+            questionTextDisplay.style.display = 'block';
+
+            optionsContainer.innerHTML = ''; // Clear previous options
+
+            currentQuestionData.optionsAudioText.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.classList.add('question-option');
+                const optionText = `${String.fromCharCode(65 + index)}. ${option}`; // Display full option text
+                optionDiv.innerHTML = `<input type="radio" name="question-${currentQuestionIndex}" id="option-${currentQuestionIndex}-${index}" value="${option}" class="mr-3 cursor-pointer">
+                                       <label for="option-${currentQuestionIndex}-${index}" class="cursor-pointer flex-grow">${optionText}</label>`;
+                optionDiv.addEventListener('click', () => {
+                    document.querySelectorAll(`#options-container .question-option`).forEach(opt => opt.classList.remove('selected'));
+                    optionDiv.classList.add('selected');
+                    optionDiv.querySelector('input[type="radio"]').checked = true;
+                    userAnswers[currentQuestionIndex] = option; // Store the selected answer text
+                });
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            // Restore user's previous selection if any
+            if (userAnswers[currentQuestionIndex] !== null) {
+                const selectedOptionValue = userAnswers[currentQuestionIndex];
+                const radioInput = optionsContainer.querySelector(`input[value="${selectedOptionValue}"]`);
+                if (radioInput) {
+                    radioInput.checked = true;
+                    radioInput.closest('.question-option').classList.add('selected');
+                }
+                // If an answer was previously selected, options should remain disabled
+                optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
+                optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.add('disabled'));
+                submitAnswerBtn.style.display = 'none'; // Hide submit button
+                showExplanationBtn.style.display = 'block'; // Show explanation button
+                nextBtn.style.display = 'block'; // Show next button
+            } else {
+                // If no answer selected, ensure options are enabled for interaction
+                optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = false);
+                optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.remove('disabled'));
+            }
+
+            // Update navigation button visibility
+            prevBtn.style.display = currentQuestionIndex > 0 ? 'block' : 'none';
+            nextBtn.style.display = 'none'; // Next button only appears after submission or explanation
+        }
+
+        function showStatusMessage(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.style.display = 'block';
+        }
+
+        function hideStatusMessage() {
+            statusMessage.style.display = 'none';
+        }
+
+        function submitAnswer() {
+            const { currentQuestionData } = getQuestionDataByIndex(currentQuestionIndex);
+            const selectedRadio = optionsContainer.querySelector(`input[name="question-${currentQuestionIndex}"]:checked`);
+
+            if (!selectedRadio) {
+                showStatusMessage('請選擇一個答案。', 'error');
+                return;
+            }
+
+            const userAnswer = selectedRadio.value;
+            userAnswers[currentQuestionIndex] = userAnswer;
+
+            // Disable options after submission
+            optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
+            optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.add('disabled'));
+
+            // Show correct/incorrect feedback
+            const optionsDivs = optionsContainer.querySelectorAll('.question-option');
+            optionsDivs.forEach(optionDiv => {
+                const optionValue = optionDiv.querySelector('input[type="radio"]').value;
+                if (optionValue === currentQuestionData.correctAnswerText) {
+                    optionDiv.classList.add('correct');
+                } else if (optionValue === userAnswer) {
+                    optionDiv.classList.add('incorrect');
+                }
+            });
+
+            submitAnswerBtn.style.display = 'none';
+            showExplanationBtn.style.display = 'block';
+            nextBtn.style.display = 'block';
+
+            if (userAnswer === currentQuestionData.correctAnswerText) {
+                showStatusMessage('答案正確！', 'success');
+            } else {
+                showStatusMessage('答案錯誤。', 'error');
+            }
+        }
+
+        function showExplanation() {
+            isExplanationMode = true;
+            const { conversationGroup, currentQuestionData } = getQuestionDataByIndex(currentQuestionIndex);
+
+            // Display conversation transcript
+            conversationTextContent.textContent = conversationGroup.conversationAudioText;
+            conversationTranscriptDisplay.style.display = 'block';
+
+            // Display question text (already visible, but ensure it's styled for explanation)
+            questionTextContent.textContent = currentQuestionData.questionText;
+            questionTextDisplay.style.display = 'block';
+
+            // Update options to show full text and correct/incorrect styling
+            optionsContainer.innerHTML = ''; // Clear and re-render with full text
+            currentQuestionData.optionsAudioText.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.classList.add('question-option', 'disabled'); // Keep disabled in explanation mode
+                const optionText = `${String.fromCharCode(65 + index)}. ${option}`;
+                optionDiv.innerHTML = `<input type="radio" name="question-${currentQuestionIndex}" id="option-${currentQuestionIndex}-${index}" value="${option}" class="mr-3 cursor-pointer" disabled>
+                                       <label for="option-${currentQuestionIndex}-${index}" class="cursor-pointer flex-grow">${optionText}</label>`;
+                
+                if (option === currentQuestionData.correctAnswerText) {
+                    optionDiv.classList.add('correct');
+                } else if (option === userAnswers[currentQuestionIndex]) {
+                    optionDiv.classList.add('incorrect');
+                }
+                if (option === userAnswers[currentQuestionIndex]) {
+                    optionDiv.classList.add('selected');
+                    optionDiv.querySelector('input[type="radio"]').checked = true;
+                }
+
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            // Display explanation details
+            officialExplanation.textContent = currentQuestionData.explanation.official;
+            vocabularyExplanation.textContent = currentQuestionData.explanation.vocabulary;
+            analysisExplanation.textContent = currentQuestionData.explanation.analysis;
+            explanationDisplay.style.display = 'block';
+
+            showExplanationBtn.style.display = 'none';
+            nextBtn.style.display = 'block';
+        }
+
+        function goToNextQuestion() {
+            if (currentQuestionIndex < totalQuestionsCount - 1) { // Use totalQuestionsCount
+                currentQuestionIndex++;
+                isExplanationMode = false;
+                loadQuestion();
+            } else {
+                testArea.style.display = 'none';
+                completionArea.style.display = 'block';
+            }
+        }
+
+        function goToPreviousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                isExplanationMode = false;
+                loadQuestion();
+            }
+        }
+
+        function restartTest() {
+            currentQuestionIndex = 0;
+            userAnswers = new Array(totalQuestionsCount).fill(null); // Use totalQuestionsCount
+            isExplanationMode = false;
+            completionArea.style.display = 'none';
+            testArea.style.display = 'block';
+            loadQuestion();
+        }
+
+        // Event Listeners
+        nextBtn.addEventListener('click', goToNextQuestion);
+        prevBtn.addEventListener('click', goToPreviousQuestion);
+        submitAnswerBtn.addEventListener('click', submitAnswer);
+        showExplanationBtn.addEventListener('click', showExplanation);
+        restartTestBtn.addEventListener('click', restartTest);
+        
+        nextPartBtn.addEventListener('click', () => {
+            //alert('即將前往 Part 4 測驗！ (此功能待 Part 4 頁面完成後實作)');
+            window.location.href = "./part4.html"; // Example navigation
+
+    
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', loadQuestion);
+
+        // Cancel speech if user navigates away or closes tab
+        window.addEventListener('beforeunload', () => {
+            if ('speechSynthesis' in window && isSpeaking) {
+                window.speechSynthesis.cancel();
+            }
+        });
+    </script>
+</body>
+</html>

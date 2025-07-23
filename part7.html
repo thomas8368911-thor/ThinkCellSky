@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多益線上模擬測驗 - Part 7</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .passage-container {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .passage-content {
+            white-space: pre-wrap;
+            line-height: 1.75;
+            color: #495057;
+        }
+        .option-label:hover {
+            background-color: #e9ecef;
+        }
+        input[type="radio"]:checked + .option-label {
+            background-color: #dbeafe;
+            border-color: #60a5fa;
+        }
+        .analysis-section {
+            background-color: #f8f9fa;
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        /* Grid for multiple passages */
+        .passages-grid-3 {
+            display: grid;
+            gap: 1.5rem;
+        }
+        @media (min-width: 1024px) {
+            .passages-grid-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .passages-grid-3 .passage-container:first-child {
+                grid-column: span 2 / span 2;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="test-container" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Header -->
+        <header class="bg-white shadow-md rounded-lg p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-blue-600">TOEIC Part 7: Reading Comprehension</h1>
+                <p class="text-gray-600 mt-1">閱讀測驗 - 54 題完整版</p>
+            </div>
+            <div id="timer" class="text-xl font-semibold bg-gray-200 text-gray-700 px-4 py-2 rounded-md mt-4 sm:mt-0">55:00</div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main-content" class="bg-white shadow-md rounded-lg p-6">
+            <h2 id="passage-title" class="text-xl font-bold mb-4 text-gray-700"></h2>
+            
+            <!-- Passages Area -->
+            <div id="passages-area">
+                <!-- Passage content will be dynamically inserted here -->
+            </div>
+
+            <!-- Questions Area -->
+            <div id="questions-container" class="mt-8 space-y-8">
+                <!-- Questions will be dynamically inserted here -->
+            </div>
+
+            <div class="mt-8 pt-6 border-t flex justify-between items-center">
+                <button id="prev-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300 disabled:opacity-50" disabled>上一題組</button>
+                <div id="progress-indicator" class="text-sm text-gray-600"></div>
+                <button id="next-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">下一題組</button>
+                <button id="submit-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 hidden">提交答案</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="results-container" class="hidden max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 mt-8 text-center">
+        <h2 class="text-3xl font-bold text-gray-800 mb-4">測驗完成！</h2>
+        <p class="text-xl text-gray-600 mb-2">您的成績</p>
+        <p class="text-5xl font-bold text-blue-600 mb-4">
+            <span id="score-val">0</span> / <span id="total-q">0</span>
+        </p>
+        <p class="text-xl text-gray-600 mb-6">答對率: <span id="score-percent" class="font-bold text-blue-600">0%</span></p>
+        
+        <h3 class="text-xl font-semibold text-gray-700 mb-3">答題狀況 (點擊題號可跳至詳解)</h3>
+        <div id="summary-grid" class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 mb-8">
+            <!-- Summary items will be dynamically inserted here -->
+        </div>
+        
+        <div class="flex flex-wrap justify-center gap-4 mt-8">
+            <button id="restart-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300">重新開始</button>
+            <button id="review-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300">查看詳解</button>
+             <button id="reviex-btn" class="bg-red-500 hover:bg-red-800 text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300">回首頁</button>
+        </div>
+    </div>
+
+    <!-- Analysis Section -->
+    <div id="analysis-container" class="hidden max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 mt-8">
+        <!-- Analysis content will be dynamically inserted here -->
+    </div>
+
+<script>
+const allPassageSets = [
+    // Questions 147-148
+    { type: 'single', title: 'the following notice', passages: [{ type: 'Notice', content: `**Attention, GreenValley Office Park Tenants**\n\nEffective Monday, August 4, the main entrance to Building B will be temporarily closed for renovations. The project is expected to last approximately two weeks, concluding on or before Friday, August 15.\n\nDuring this period, all tenants and visitors must use the west-side service entrance, located near the parking garage. Directional signs will be posted to guide you.\n\nWe understand this may cause some inconvenience and appreciate your patience as we work to improve our facilities. The renovation includes the installation of a new, energy-efficient revolving door and an upgraded security system.\n\nFor any questions, please contact property management at (555) 245-8900.\n\n- GreenValley Property Management` }], questions: [ { number: 147, question: "What is the purpose of this notice?", options: { A: "To announce a new tenant", B: "To inform about a temporary closure", C: "To advertise office space", D: "To report a security issue" }, answer: "B", analysis: { translation: "此公告的目的是什麼？", explanation: "公告開頭明確指出 'the main entrance to Building B will be temporarily closed' (B棟主入口將暫時關閉)。這表明公告的主要目的是通知租戶關於入口的臨時關閉。因此，(B) 是正確答案。", vocab: { "renovation (n.)": "整修", "temporarily (adv.)": "暫時地", "conclude (v.)": "結束" } } }, { number: 148, question: "What improvement is NOT mentioned in the notice?", options: { A: "A new door", B: "An enhanced security system", C: "New directional signs", D: "Repainted walls" }, answer: "D", analysis: { translation: "公告中未提及哪項改善工程？", explanation: "公告中提到了 'a new, energy-efficient revolving door' (新門)、'an upgraded security system' (升級的保全系統) 以及 'Directional signs will be posted' (將張貼指引標誌)。文中完全沒有提到牆壁重新粉刷 (Repainted walls)。因此，(D) 是正確答案。", vocab: { "energy-efficient (adj.)": "節能的", "upgraded (adj.)": "升級的", "directional signs": "指引標誌" } } } ] },
+    // Questions 149-152
+    { type: 'single', title: 'the following e-mail', passages: [{ type: 'E-mail', content: `To: Sales Team <sales@prestigewatches.com>\nFrom: Marcus Thorne <m.thorne@prestigewatches.com>\nDate: July 22, 2025\nSubject: Important Update: Q3 Sales Strategy Meeting\n\nDear Team,\n\nPlease be advised that the Quarterly Sales Strategy meeting, originally scheduled for this Friday, July 25, has been rescheduled. The meeting will now take place on **Monday, July 28, at 10:00 A.M.** in Conference Room 3.\n\nThe change is necessary to accommodate the attendance of our international marketing director, Ms. Anya Sharma, who will be flying in from the London office. Her insights into global market trends are invaluable, and we felt it was crucial to have her present.\n\nThe agenda remains the same. We will review our Q2 performance, finalize the sales targets for Q3, and brainstorm new promotional campaigns. Please come prepared to discuss your regional performance and present at least one new outreach idea.\n\nI apologize for any inconvenience this change may cause.\n\nBest regards,\nMarcus Thorne\nVP of Sales` }], questions: [ { number: 149, question: "Why was the meeting rescheduled?", options: { A: "The conference room was unavailable.", B: "To allow an executive to attend.", C: "The sales targets were not ready.", D: "To give the team more time to prepare." }, answer: "B", analysis: { translation: "會議為何重新安排時間？", explanation: "電子郵件中明確指出，會議變更是為了 'to accommodate the attendance of our international marketing director, Ms. Anya Sharma' (配合我們的國際行銷總監 Anya Sharma 女士的出席)。因此，(B) 是正確答案。", vocab: { "reschedule (v.)": "重新安排時間", "accommodate (v.)": "為...提供方便；容納", "attendance (n.)": "出席" } } }, { number: 150, question: "Who is Ms. Anya Sharma?", options: { A: "The VP of Sales", B: "A regional salesperson", C: "The marketing director", D: "A new client" }, answer: "C", analysis: { translation: "Anya Sharma 女士是誰？", explanation: "郵件中介紹她為 'our international marketing director' (我們的國際行銷總監)。因此，(C) 是正確答案。", vocab: { "director (n.)": "總監；董事", "VP (Vice President)": "副總裁" } } }, { number: 151, question: "What are attendees expected to do?", options: { A: "Submit a full report before the meeting.", B: "Contact the London office.", C: "Propose a new idea for outreach.", D: "Finalize their travel arrangements." }, answer: "C", analysis: { translation: "與會者被期望做什麼？", explanation: "郵件最後要求與會者 'present at least one new outreach idea' (提出至少一個新的客戶開發點子)。因此，(C) 是正確答案。", vocab: { "outreach (n.)": "(向外的) 聯繫、拓展、服務", "propose (v.)": "提議" } } }, { number: 152, question: "The word 'invaluable' in paragraph 2, line 3, is closest in meaning to", options: { A: "worthless", B: "inexpensive", C: "uninteresting", D: "extremely useful" }, answer: "D", analysis: { translation: "在第2段第3行中的 'invaluable' 一詞，意思最接近哪個選項？", explanation: "'Invaluable' 是一個常見的易混淆詞，它的意思是「極其寶貴的、非常有用的」，而不是「沒有價值的」。上下文提到她的見解很重要，因此 (D) 'extremely useful' (極其有用) 是最佳同義詞。", vocab: { "invaluable (adj.)": "極其寶貴的", "insight (n.)": "見解；洞察力" } } } ] },
+    // Questions 153-157
+    { type: 'multiple', layout: 'grid-cols-2', title: 'the following advertisement and e-mail', passages: [{ type: 'Advertisement', content: `**Skyline Office Suites - Your Premier Business Address**\n\nTired of working from home? Need a professional space to meet clients? Skyline Office Suites offers flexible solutions for modern businesses.\n\n**Our Packages:**\n* **Virtual Office:** Business address, mail handling, and 2 hours of conference room use per month. - $150/month\n* **Hot Desk:** Access to any available desk in our shared workspace, Mon-Fri, 9 AM - 6 PM. - $300/month\n* **Dedicated Desk:** Your own personal desk in the shared workspace, 24/7 access. - $450/month\n* **Private Office:** Fully furnished, lockable office for 1-4 people, 24/7 access. - Starting at $900/month\n\n**All packages include:** High-speed Wi-Fi, complimentary coffee/tea, and access to networking events.\n\n**Special Offer!** Sign a 6-month contract for any package and receive your first month FREE! Offer valid until August 31.\n\nVisit us at 123 Business Rd. or online at www.skylineoffices.com.` }, { type: 'E-mail', content: `To: contact@skylineoffices.com\nFrom: chloe.davis@cde-consulting.net\nDate: August 2, 2025\nSubject: Inquiry about Dedicated Desk\n\nDear Skyline Team,\n\nI am the founder of a small environmental consulting startup and am interested in your Dedicated Desk package. Your location is ideal for me.\n\nI have a few questions. First, does the 24/7 access apply to weekends as well? Second, my work requires me to make frequent, confidential phone calls. While I don't need a full private office, is there a quiet space or phone booth available for members with desk packages? This is a critical factor for me.\n\nFinally, regarding your special offer, if I sign a 6-month contract now, would the free month be August, or would my paid term start in September?\n\nI look forward to your response.\n\nBest,\nChloe Davis` }], questions: [ { number: 153, question: "What is NOT included in all Skyline Office Suites packages?", options: { A: "Internet access", B: "Complimentary beverages", C: "24/7 access", D: "Invitations to events" }, answer: "C", analysis: { translation: "哪項服務未包含在所有的 Skyline 辦公套房方案中？", explanation: "廣告中提到 'All packages include: High-speed Wi-Fi, complimentary coffee/tea, and access to networking events'。然而，只有 'Dedicated Desk' 和 'Private Office' 方案才提供 '24/7 access' (24/7 全天候進出)。'Hot Desk' 方案的進出時間是有限制的。因此，(C) 是正確答案。", vocab: { "complimentary (adj.)": "免費贈送的", "dedicated (adj.)": "專用的" } } }, { number: 154, question: "What is the main reason for Chloe Davis's e-mail?", options: { A: "To book a tour", B: "To sign a contract", C: "To cancel a membership", D: "To ask for more information" }, answer: "D", analysis: { translation: "Chloe Davis 寫這封電子郵件的主要原因是什麼？", explanation: "在郵件中，Chloe Davis 提出了三個具體問題 ('I have a few questions.')，關於週末進出、電話亭以及特別優惠的細節。這表明她寫信是為了在做決定前獲取更多資訊。因此，(D) 是正確答案。", vocab: { "inquiry (n.)": "詢問", "confidential (adj.)": "機密的" } } }, { number: 155, question: "What is implied about CDE-Consulting?", options: { A: "It is a large corporation.", B: "It has several employees.", C: "It is a newly established business.", D: "It is moving from another city." }, answer: "C", analysis: { translation: "關於 CDE-Consulting，可以推斷出什麼？", explanation: "Chloe Davis 在郵件中稱自己是 'founder of a small environmental consulting startup' (一家小型環保顧問新創公司的創辦人)。'Startup' 這個詞意味著這是一家新成立的公司。因此，(C) 是正確答案。", vocab: { "founder (n.)": "創辦人", "startup (n.)": "新創公司" } } }, { number: 156, question: "What is most important to Chloe Davis besides a desk?", options: { A: "Free coffee", B: "A place for private calls", C: "A prestigious business address", D: "Meeting new people" }, answer: "B", analysis: { translation: "除了書桌之外，什麼對 Chloe Davis 最重要？", explanation: "她在郵件中特別強調 'is there a quiet space or phone booth available... This is a critical factor for me.' (是否有安靜空間或電話亭可用...這對我來說是一個關鍵因素)。這顯示了私人通話空間對她的重要性。因此，(B) 是正確答案。", vocab: { "critical factor": "關鍵因素", "phone booth": "電話亭" } } }, { number: 157, question: "If Chloe Davis signs a contract on August 5, what will likely happen?", options: { A: "She will not get the special offer.", B: "Her first payment will be for September.", C: "She will have to choose the Private Office package.", D: "She will receive a 10% discount." }, answer: "B", analysis: { translation: "如果 Chloe Davis 在 8 月 5 日簽約，最有可能發生什麼事？", explanation: "廣告中的特別優惠是 'Sign a 6-month contract... and receive your first month FREE! Offer valid until August 31.'。Chloe 在 8 月 2 日詢問，如果她現在簽約，免費的月份是八月還是付費期從九月開始。根據優惠，如果她在 8 月 5 日簽約，她將獲得第一個月（八月）免費，這意味著她的第一個付費月份將是九月。因此，(B) 是正確答案。", vocab: { "valid (adj.)": "有效的", "term (n.)": "期限" } } } ] },
+    // Questions 158-160
+    { type: 'single', title: 'the following article', passages: [{ type: 'Article', content: `**Oak Brook City Adopts New Recycling Initiative**\n\nOAK BROOK, April 18 – The Oak Brook City Council unanimously approved a new city-wide recycling program during its meeting last Tuesday. The "Oak Brook Recycles" initiative, set to launch on June 1, aims to significantly increase the volume of recycled materials and reduce landfill waste.\n\nThe new program mandates the separation of recyclable materials into two categories: mixed paper/cardboard and a combined container category for plastic, glass, and metal. New dual-stream recycling bins will be distributed to all residential households throughout May.\n\nA key component of the initiative is a public awareness campaign. "Our goal is not just to provide the tools, but also to educate residents on the importance of proper recycling," said Councilwoman Eva Rostova, who championed the program. "Workshops will be held at the community center every Saturday in May." While the program is currently focused on residential areas, the city plans to expand it to include commercial businesses within the next two years.` }], questions: [ { number: 158, question: "What is the main topic of the article?", options: { A: "A new community center", B: "A local election result", C: "A city-wide recycling plan", D: "A new tax policy" }, answer: "C", analysis: { translation: "這篇文章的主題是什麼？", explanation: "文章從頭到尾都在討論一個新的城市回收計畫，包括其名稱、目標、實施方式和推廣活動。因此，(C) 是最能概括文章主旨的選項。", vocab: { "initiative (n.)": "倡議；新措施", "unanimously (adv.)": "全體一致地", "mandate (v.)": "強制規定" } } }, { number: 159, question: "What will happen in May?", options: { A: "The program will be expanded to businesses.", B: "Residents will receive new bins.", C: "The program will officially start.", D: "The city council will vote on the plan." }, answer: "B", analysis: { translation: "五月份會發生什麼事？", explanation: "文章第二段提到 'New dual-stream recycling bins will be distributed to all residential households throughout May' (新的雙軌回收桶將在整個五月分發給所有住戶)。同時，第三段也提到五月的每個星期六都會舉辦工作坊。選項 (B) 符合文意。", vocab: { "distribute (v.)": "分發", "household (n.)": "家庭；住戶" } } }, { number: 160, question: "The word 'championed' in paragraph 3, line 2, is closest in meaning to", options: { A: "criticized", B: "questioned", C: "supported", D: "won" }, answer: "C", analysis: { translation: "在第3段第2行中的 'championed' 一詞，意思最接近哪個選項？", explanation: "在這裡，'champion' 作為動詞，意思是「擁護、支持」。Councilwoman Eva Rostova 是這個計畫的支持者和推動者。因此，(C) 'supported' (支持) 是最接近的同義詞。", vocab: { "champion (v.)": "擁護；支持", "awareness campaign": "意識提升活動" } } } ] },
+    // Questions 161-165
+    { type: 'multiple', layout: 'grid-2', title: 'the following invoice and text message chain', passages: [{ type: 'Invoice', content: `**QuickFix Appliance Repair**\nInvoice #8841\nDate: November 10\n\n**Customer:**\nLeo Martinez\n15 River St.\nNorthwood\n\n**Service Performed:**\n- Diagnostic check on a "KitchenAid" refrigerator (Model: KRFC300ESS)\n- Problem: Not cooling\n- Service Date: November 9\n- Technician: David Chen\n\n**Breakdown:**\n- Service Call Fee (includes diagnostic): $85.00\n- Part: Compressor Relay (Part #WP2262181): $45.50\n- Labor (1.5 hours): $112.50\n- **Total: $243.00**\n\nPayment is due within 30 days. Thank you for your business!` }, { type: 'Text Message Chain', content: `**(555) 903-2121 (QuickFix Repair)**\n**(555) 478-9901 (Leo Martinez)**\n\n**Nov 12, 10:15 AM**\n**Leo:** Hi, this is Leo Martinez, invoice #8841. The fridge is working fine now, thanks. I just noticed a 'Senior Discount (10%)' mentioned on your website's FAQ page. I believe this wasn't applied to my bill.\n\n**Nov 12, 10:18 AM**\n**QuickFix:** Hello Mr. Martinez. Thank you for reaching out. We apologize for the oversight. Can you confirm your date of birth to verify eligibility?\n\n**Nov 12, 10:19 AM**\n**Leo:** October 26, 1958.\n\n**Nov 12, 10:22 AM**\n**QuickFix:** Thank you. You are indeed eligible. We have just issued a revised invoice. The new total reflecting the discount on service and labor will be sent to your e-mail. The discount does not apply to parts. Please disregard the previous invoice.` }], questions: [ { number: 161, question: "What was the problem with the appliance?", options: { A: "It was making a loud noise.", B: "It was leaking water.", C: "It was not getting cold.", D: "Its door would not close." }, answer: "C", analysis: { translation: "這個電器有什麼問題？", explanation: "發票上明確寫著 'Problem: Not cooling' (問題：不冷)。因此，(C) 是正確答案。", vocab: { "appliance (n.)": "家電用品", "diagnostic (n.)": "診斷" } } }, { number: 162, question: "Who performed the repair?", options: { A: "Leo Martinez", B: "David Chen", C: "A senior technician", D: "It is not mentioned." }, answer: "B", analysis: { translation: "是誰進行了維修？", explanation: "發票的 'Service Performed' 區塊中列出了 'Technician: David Chen' (技師：David Chen)。因此，(B) 是正確答案。", vocab: { "technician (n.)": "技師", "breakdown (n.)": "明細" } } }, { number: 163, question: "Why did Leo Martinez contact QuickFix?", options: { A: "To schedule a new repair", B: "To complain about the service", C: "To ask about a discount", D: "To pay his bill" }, answer: "C", analysis: { translation: "Leo Martinez 為何聯繫 QuickFix？", explanation: "在簡訊中，Leo Martinez 提到他注意到網站上的 'Senior Discount'，並認為這個折扣沒有應用到他的帳單上。因此他聯繫 QuickFix 是為了詢問折扣事宜，選項 (C) 正確。", vocab: { "apply to": "適用於", "bill (n.)": "帳單" } }}, { number: 164, question: "In the text message at 10:22 AM, what does 'oversight' mean?", options: { A: "A type of repair", B: "An extra charge", C: "A mistake", D: "A company policy" }, answer: "C", analysis: { translation: "在 10:22 AM 的簡訊中，'oversight' 是什麼意思？", explanation: "'Oversight' 指的是「疏忽、失察」。在這裡，QuickFix 為忘記給予折扣而道歉，承認這是一個疏忽。因此，(C) 'A mistake' (一個錯誤) 是最接近的意思。", vocab: { "oversight (n.)": "疏忽", "eligibility (n.)": "資格" } } }, { number: 165, question: "How much will the discount be?", options: { A: "$4.55", B: "$8.50", C: "$19.75", D: "$24.30" }, answer: "C", analysis: { translation: "折扣金額會是多少？", explanation: "簡訊中提到折扣適用於服務和勞務 ('service and labor')，但不適用於零件 ('parts')。服務費是 $85.00，勞務費是 $112.50，總共是 $197.50。10% 的折扣就是 $197.50 * 0.10 = $19.75。因此，(C) 是正確答案。", vocab: { "revised (adj.)": "修訂過的", "reflect (v.)": "反映" } } } ] },
+    // Questions 166-170
+    { type: 'multiple', layout: 'grid-3', title: 'the following Web page, review, and e-mail', passages: [{ type: 'Web Page', content: `**AeroClean Air Purifier Pro**\n\nBreathe cleaner air with the AeroClean Pro! Our state-of-the-art air purifier is perfect for rooms up to 500 sq. ft.\n\n**Features:**\n* **True HEPA Filter:** Captures 99.97% of airborne particles like dust, pollen, and pet dander.\n* **Smart Sensor:** Automatically adjusts fan speed based on real-time air quality.\n* **Ultra-Quiet Sleep Mode:** Operates at a whisper-quiet 25dB.\n* **Filter Replacement Indicator:** A light on the unit turns red when it's time to change the filter (approximately every 6 months).\n\n**Price:** $249.99\n**Replacement Filters (Model AF-24):** $39.99\nAll products come with a 1-year limited warranty.` }, { type: 'Online Review', content: `★★☆☆☆ **Good, but one major flaw**\n*By Kenji Tanaka on May 15*\n\nI bought the AeroClean Pro a month ago. It's very quiet and my allergies have definitely improved. The auto mode seems to work well. However, the main reason I chose this model over competitors was the filter replacement indicator. The product description says a light turns red. Mine has no such light. I have no idea when to change the filter, which defeats the purpose of this key feature. I wouldn't have spent this much if I'd known. Disappointed.` }, { type: 'E-mail', content: `To: Kenji Tanaka <kenji.t@email.com>\nFrom: support@aeroclean.com\nDate: May 16\nSubject: Re: Your AeroClean Pro Review\n\nDear Mr. Tanaka,\n\nWe saw your review on the retailer's website and are sorry to hear about your experience. We have identified an issue with a small batch of units from an early production run where the filter indicator light was not properly connected.\n\nWe would like to send you a brand-new, fully functional AeroClean Pro unit, free of charge. We will also include a complimentary AF-24 replacement filter for your trouble. A shipping confirmation will be sent to you within 2 business days. There is no need to return your current unit.\n\nWe hope this resolves the issue to your satisfaction.\n\nSincerely,\nThe AeroClean Team` }], questions: [ { number: 166, question: "What does the AeroClean Pro's 'Smart Sensor' do?", options: { A: "It orders new filters automatically.", B: "It turns the unit off after a set time.", C: "It adjusts the fan speed based on air quality.", D: "It connects to a smartphone app." }, answer: "C", analysis: { translation: "AeroClean Pro 的「智能感應器」有什麼作用？", explanation: "網頁上的功能介紹中明確指出 'Smart Sensor: Automatically adjusts fan speed based on real-time air quality' (智能感應器：根據即時空氣品質自動調整風扇速度)。因此，(C) 是正確答案。", vocab: { "adjust (v.)": "調整", "real-time (adj.)": "即時的", "air quality": "空氣品質" } } }, { number: 167, question: "What problem did Kenji Tanaka have with his air purifier?", options: { A: "It was too noisy.", B: "The filter replacement light did not work.", C: "It did not improve his allergies.", D: "The auto mode was defective." }, answer: "B", analysis: { translation: "Kenji Tanaka 的空氣清淨機遇到了什麼問題？", explanation: "Kenji 在評論中提到 'the main reason I chose this model... was the filter replacement indicator. The product description says a light turns red. Mine has no such light.' (我選擇這個型號的主要原因是濾網更換指示燈。產品說明說燈會變紅。我的沒有這個燈)。這清楚地表明指示燈沒有作用。因此，(B) 是正確答案。", vocab: { "flaw (n.)": "瑕疵；缺點", "indicator (n.)": "指示燈", "defeats the purpose": "失去了意義" } } }, { number: 168, question: "What did AeroClean offer Kenji Tanaka?", options: { A: "A full refund.", B: "A discount on future purchases.", C: "A free repair service.", D: "A new unit and an extra filter." }, answer: "D", analysis: { translation: "AeroClean 提供了什麼給 Kenji Tanaka？", explanation: "電子郵件中，客服提出 'send you a brand-new, fully functional AeroClean Pro unit, free of charge. We will also include a complimentary AF-24 replacement filter' (免費寄給您一台全新的、功能齊全的 AeroClean Pro，我們還會附贈一個免費的 AF-24 替換濾網)。因此，(D) 是正確答案。", vocab: { "complimentary (adj.)": "免費贈送的", "functional (adj.)": "功能齊全的", "for your trouble": "作為對您造成麻煩的補償" } } }, { number: 169, question: "What does 'batch' in the e-mail, paragraph 2, mean?", options: { A: "A type of filter", B: "A group of items made at the same time", C: "A software update", D: "A shipping container" }, answer: "B", analysis: { translation: "在電子郵件第2段中，'batch' 是什麼意思？", explanation: "'Batch' 在生產和製造的語境中，指的是「一批、一組」(a group of items made at the same time)。客服解釋說問題出在早期生產的「一小批」產品上。因此，(B) 是正確答案。", vocab: { "batch (n.)": "一批", "production run": "生產批次" } } }, 
+{ number: 170, question: "What does Kenji Tanaka have to do with his original unit?", options: { A: "Return it to the retailer.", B: "Ship it back to AeroClean.", C: "Nothing.", D: "Take a video of the problem." }, answer: "C", analysis: { translation: "Kenji Tanaka 需要如何處理他原來的機器？", explanation: "電子郵件的結尾明確說明 'There is no need to return your current unit.' (無需退回您目前的機器)。這意味著他什麼都不用做。因此，(C) 是正確答案。", vocab: { "resolve (v.)": "解決", "satisfaction (n.)": "滿意" } } } ] },
+    // Questions 171-174
+    { type: 'single', title: 'the following advertisement', passages: [{ type: 'Advertisement', content: `**Riverbend Community Theater Presents: "The Midnight Train"**\n\nJoin us for a thrilling mystery by acclaimed playwright David Finch.\n\n**Showtimes:**\nFriday, October 10 & Saturday, October 11 at 8:00 P.M.\nSunday, October 12 at 2:00 P.M.\n\n**Location:**\nRiverbend Playhouse, 45 E. Market Street\n\n**Tickets:**\n- General Admission: $25\n- Seniors (65+) & Students (with ID): $20\n\nTickets can be purchased online at www.riverbendtheater.com or at the box office one hour before showtime. Seating is unassigned. We recommend arriving early.` }], questions: [ { number: 171, question: "What is being advertised?", options: { A: "A movie", B: "A concert", C: "A play", D: "A lecture" }, answer: "C", analysis: { translation: "廣告內容是什麼？", explanation: "廣告標題寫著 'Riverbend Community Theater Presents' (河灣社區劇院呈現)，並提到 'playwright' (劇作家)，這些都表明廣告的是一齣舞台劇 (play)。因此，(C) 是正確答案。", vocab: { "present (v.)": "呈現", "thrilling (adj.)": "驚險的", "acclaimed (adj.)": "備受讚譽的" } }}, { number: 172, question: "On which day is there a matinee performance?", options: { A: "Friday", B: "Saturday", C: "Sunday", D: "Monday" }, answer: "C", analysis: { translation: "哪一天有下午場的演出？", explanation: "Matinee 指的是下午的演出。廣告中的演出時間，週五和週六都是晚上 8:00 P.M.，只有週日 (Sunday) 是下午 2:00 P.M.。因此，(C) 是正確答案。", vocab: { "matinee (n.)": "(戲劇、電影等的) 日場，下午場", "performance (n.)": "表演" } }}, { number: 173, question: 'What type of play is "The Midnight Train"?', options: { A: "A comedy", B: "A romance", C: "A musical", D: "A mystery" }, answer: "D", analysis: { translation: "《午夜列車》是什麼類型的戲劇？", explanation: "廣告中將這齣戲描述為 'A thrilling mystery' (一齣驚悚懸疑劇)，並提到偵探解謎的情節。因此，(D) 是正確答案。", vocab: { "thrilling (adj.)": "驚險的", "acclaimed (adj.)": "備受讚譽的", "playwright (n.)": "劇作家" } }}, { number: 174, question: "What is stated about seating?", options: { A: "It must be reserved in advance.", B: "It is first-come, first-served.", C: "It is assigned at the door.", D: "It is included with dinner." }, answer: "B", analysis: { translation: "關於座位，公告中提到了什麼？", explanation: "廣告中明確指出 'Seating is unassigned' (座位不劃位) 和 'We recommend arriving early' (我們建議及早抵達)。這意味著座位是先到先得的。因此，(B) 是正確答案。", vocab: { "unassigned (adj.)": "未指定的", "box office (n.)": "售票處" } } } ] },
+    // Questions 175-180
+    { type: 'multiple', layout: 'grid-cols-2', title: 'the following e-mail and schedule', passages: [{ type: 'E-mail', content: `To: All Staff <all@summitcorp.net>\nFrom: HR Department <hr@summitcorp.net>\nDate: June 5\nSubject: Annual Health and Safety Training Week\n\nDear Colleagues,\n\nNext week is our annual Health and Safety Training Week. All employees are required to attend at least one session from each of the two mandatory categories: 'Emergency Procedures' and 'Workplace Ergonomics'.\n\nPlease review the attached schedule and register for your preferred sessions through the company portal by this Friday, June 8. Several time slots are available for each topic to accommodate different department schedules. Your manager has already approved your participation.\n\nAdditionally, we are offering optional workshops on 'Mental Health First Aid' and 'Healthy Eating at Work'. We highly encourage you to attend these valuable sessions if your schedule permits.\n\nThank you for your cooperation in keeping our workplace safe.\n\nSincerely,\nThe HR Department` }, { type: 'Schedule', content: `**Health and Safety Training Schedule**\n\n**Location:** Conference Center, Building A\n\n**Monday, June 11**\n* 9-10 AM: Emergency Procedures (Fire & Evacuation)\n* 2-3 PM: Workplace Ergonomics\n\n**Tuesday, June 12**\n* 11 AM - 12 PM: Workplace Ergonomics\n* 3-4 PM: Mental Health First Aid (Optional)\n\n**Wednesday, June 13**\n* 10-11 AM: Emergency Procedures (First Aid & CPR)\n* 1-2 PM: Healthy Eating at Work (Optional)\n\n**Thursday, June 14**\n* 9-10 AM: Workplace Ergonomics\n* 2-3 PM: Emergency Procedures (Fire & Evacuation)` }], questions: [ { number: 175, question: "What is the purpose of the e-mail?", options: { A: "To announce a new health insurance plan", B: "To inform staff about required training", C: "To ask for volunteers for a safety committee", D: "To schedule a company-wide party" }, answer: "B", analysis: { translation: "這封電子郵件的目的是什麼？", explanation: "郵件的主旨和第一段都明確指出，這是關於年度健康與安全培訓週的通知，並說明了員工需要參加的強制性課程。因此，(B) 是正確答案。", vocab: { "annual (adj.)": "年度的", "mandatory (adj.)": "強制的", "session (n.)": "場次；會議" } } }, { number: 176, question: "How many mandatory sessions must each employee attend?", options: { A: "One", B: "Two", C: "Three", D: "Four" }, answer: "B", analysis: { translation: "每位員工必須參加多少場強制性課程？", explanation: "郵件中提到 'All employees are required to attend at least one session from each of the two mandatory categories' (所有員工都必須從兩個強制類別中各參加至少一場)。這意味著總共需要參加兩場。因此，(B) 是正確答案。", vocab: { "required (adj.)": "必須的", "category (n.)": "類別" } } }, { number: 177, question: "What are employees asked to do by Friday?", options: { A: "Complete the training", B: "Talk to their manager", C: "Sign up for sessions", D: "Submit a safety report" }, answer: "C", analysis: { translation: "員工被要求在週五前做什麼？", explanation: "郵件第二段要求員工 'register for your preferred sessions through the company portal by this Friday, June 8' (在本週五，6月8日之前，通過公司入口網站註冊您偏好的課程)。因此，(C) 是正確答案。", vocab: { "register for": "註冊；報名", "portal (n.)": "入口網站" } }}, { number: 178, question: "Which session is NOT mandatory?", options: { A: "Workplace Ergonomics", B: "Emergency Procedures", C: "Mental Health First Aid", D: "Fire & Evacuation" }, answer: "C", analysis: { translation: "哪一場課程不是強制的？", explanation: "郵件第三段明確指出 'we are offering optional workshops on 'Mental Health First Aid' and 'Healthy Eating at Work'' ('心理健康急救' 和 '工作中的健康飲食' 是選修課)。因此，(C) 是正確答案。", vocab: { "optional (adj.)": "可選擇的", "permit (v.)": "允許" } } }, { number: 179, question: "A person who wants to learn about proper posture at their desk should attend a session on what topic?", options: { A: "Workplace Ergonomics", B: "Fire & Evacuation", C: "First Aid & CPR", D: "Healthy Eating at Work" }, answer: "A", analysis: { translation: "一個想了解在辦公桌前保持正確姿勢的人應該參加哪個主題的課程？", explanation: "'Ergonomics' (人體工學) 就是研究如何使工作環境和設備更適合人體，以提高效率並減少不適，這其中就包括了正確的坐姿。因此，(A) 是正確答案。", vocab: { "ergonomics (n.)": "人體工學", "posture (n.)": "姿勢" } } }, { number: 180, question: "On what day is no 'Workplace Ergonomics' session scheduled?", options: { A: "Monday", B: "Tuesday", C: "Wednesday", D: "Thursday" }, answer: "C", analysis: { translation: "哪一天沒有安排「職場人體工學」的課程？", explanation: "查看時間表，'Workplace Ergonomics' 課程安排在週一、週二和週四。週三 (Wednesday) 的課程是 'Emergency Procedures' 和 'Healthy Eating at Work'。因此，(C) 是正確答案。", vocab: { "scheduled (adj.)": "已排定的" } } } ] },
+    // Questions 181-185
+    { type: 'multiple', layout: 'grid-cols-2', title: 'the following e-mail and Web page', passages: [{ type: 'E-mail', content: `To: All Staff <all@innovatech.com>\nFrom: HR Department <hr@innovatech.com>\nDate: May 20\nSubject: You're Invited! Innovatech Annual Company Picnic\n\nHello Team,\n\nGet ready for some fun in the sun! We are thrilled to invite you and your immediate family to our annual company picnic.\n\nThis year, we'll be at the beautiful Lakeside Park on **Saturday, June 14, from 11:00 A.M. to 4:00 P.M.** We'll have a delicious catered barbecue, fun games for all ages, and great company.\n\nTo ensure we have an accurate headcount for catering and activities, please RSVP by **Friday, May 30**, using the link on the company intranet homepage. On the RSVP form, you can specify the number of family members attending and select your preferred activities.\n\nWe can't wait to celebrate a great year with all of you!\n\nBest,\nInnovatech HR` }, { type: 'Web Page', content: `**Innovatech Picnic RSVP Form**\n\n**Employee Name:** [Text Field]\n\n**Number of Attendees (including yourself):**\n- Adults (13+): [Dropdown 1-5]\n- Children (12 and under): [Dropdown 0-5]\n\n**Activity Preference (Choose one per family):**\n- [ ] Volleyball Tournament (Team-based)\n- [ ] Guided Nature Hike (Starts at 1:00 P.M.)\n- [ ] Pontoon Boat Rides (Every 30 mins)\n\n**Dietary Requirements:**\n- [ ] Vegetarian\n- [ ] Gluten-Free\n- [ ] Other (please specify): [Text Field]\n\n**Submission Deadline: May 30**` }], questions: [ { number: 181, question: "What is the main purpose of the e-mail?", options: { A: "To announce a new park opening", B: "To invite employees to a company event", C: "To request volunteers for a party", D: "To survey interest in new activities" }, answer: "B", analysis: { translation: "這封電子郵件的主要目的是什麼？", explanation: "郵件的主旨和第一段都清楚地表明，這是一封邀請員工及其家人參加年度公司野餐的信件。因此，(B) 是正確答案。", vocab: { "annual (adj.)": "年度的", "picnic (n.)": "野餐" } } }, { number: 182, question: "Who is invited to the picnic?", options: { A: "HR department staff only", B: "Clients and partners", C: "Employees and their immediate family", D: "Senior management only" }, answer: "C", analysis: { translation: "誰被邀請參加野餐？", explanation: "郵件中提到 'invite you and your immediate family' (邀請您和您的直系親屬)。因此，(C) 是正確答案。", vocab: { "immediate family": "直系親屬", "thrilled (adj.)": "非常興奮的" } } }, { number: 183, question: "What must employees do by May 30?", options: { A: "Choose a team for the tournament", B: "Pay for their tickets", C: "Submit their food preferences", D: "Respond to the invitation" }, answer: "D", analysis: { translation: "員工必須在 5 月 30 日前做什麼？", explanation: "郵件和網頁都強調了 'please RSVP by Friday, May 30' (請在 5 月 30 日星期五前回覆)。RSVP 就是回覆邀請的意思。因此，(D) 是正確答案。", vocab: { "RSVP (répondez s'il vous plaît)": "請回覆", "headcount (n.)": "人數" } }}, { number: 184, question: "Which activity is NOT offered on the form?", options: { A: "A boat ride", B: "A hiking trip", C: "A volleyball game", D: "A swimming contest" }, answer: "D", analysis: { translation: "表單上未提供哪項活動？", explanation: "網頁表單上列出的活動有 'Volleyball Tournament'、'Guided Nature Hike' 和 'Pontoon Boat Rides'。沒有提到游泳比賽 (swimming contest)。因此，(D) 是正確答案。", vocab: { "preference (n.)": "偏好", "tournament (n.)": "錦標賽" } } }, { number: 185, question: "What is indicated on the RSVP form?", options: { A: "The event is for adults only.", B: "Employees must pay for their children.", C: "Special meals can be requested.", D: "The event will be canceled if it rains." }, answer: "C", analysis: { translation: "RSVP 表單上顯示了什麼？", explanation: "表單上有一個 'Dietary Requirements' (飲食要求) 的區塊，允許員工選擇素食、無麩質或註明其他特殊需求。這表明可以要求特殊餐點。因此，(C) 是正確答案。", vocab: { "dietary requirements": "飲食要求", "specify (v.)": "具體說明" } } } ] },
+    // Questions 186-190
+    { type: 'multiple', layout: 'grid-3', title: 'the following job advertisement and e-mail', passages: [{ type: 'Job Advertisement', content: `**Position: Senior Marketing Analyst**\n**Company:** DataDriven Inc.\n**Location:** San Francisco, CA\n\nDataDriven Inc. is a leader in market research and consumer behavior analysis. We are seeking a highly motivated Senior Marketing Analyst to join our dynamic team.\n\n**Responsibilities:**\n- Analyze large datasets to identify market trends and consumer patterns.\n- Develop and present reports on campaign performance.\n- Collaborate with the marketing team to devise data-informed strategies.\n- Design and implement A/B tests for digital campaigns.\n\n**Qualifications:**\n- Bachelor's degree in Marketing, Statistics, or a related field.\n- 5+ years of experience in marketing analytics.\n- Proficiency in SQL and data visualization tools (e.g., Tableau, Power BI).\n- Strong communication and presentation skills.\n\nWe offer a competitive salary, comprehensive benefits, and a flexible work environment. To apply, please send your resume and a cover letter to careers@datadriven.com by October 25.` }, { type: 'E-mail', content: `To: careers@datadriven.com\nFrom: j.sato@email.com\nDate: October 18\nSubject: Question regarding Senior Marketing Analyst position\n\nDear Hiring Manager,\n\nI am very interested in the Senior Marketing Analyst position advertised on your website. My background in data analysis and marketing strategy aligns well with the responsibilities listed.\n\nI have over six years of experience in the field and am highly proficient in SQL and Tableau. However, my bachelor's degree is in Economics. While it is a related field with a strong quantitative focus, it is not explicitly listed in the qualifications. \n\nCould you please clarify if my educational background would be considered for this role? I am confident that my skills and experience make me a strong candidate.\n\nThank you for your time and consideration.\n\nSincerely,\nJun Sato` }], questions: [ { number: 186, question: "What is a requirement for the job?", options: { A: "A Master's degree", B: "Experience with graphic design", C: "Knowledge of SQL", D: "Willingness to travel internationally" }, answer: "C", analysis: { translation: "這份工作的要求是什麼？", explanation: "廣告的 'Qualifications' 部分明確列出 'Proficiency in SQL and data visualization tools' (精通 SQL 和數據可視化工具)。因此，(C) 是正確答案。", vocab: { "proficiency (n.)": "精通", "qualification (n.)": "資格" } } }, { number: 187, question: "What does Jun Sato ask about?", options: { A: "The salary range", B: "The application deadline", C: "The company's work environment", D: "His educational background" }, answer: "D", analysis: { translation: "Jun Sato 詢問了什麼？", explanation: "Jun Sato 在郵件中提到他的學位是經濟學，這並未明確列在職位要求中，他因此詢問 'if my educational background would be considered for this role?' (我的教育背景是否會被考慮)。因此，(D) 是正確答案。", vocab: { "aligns with": "與...一致", "explicitly (adv.)": "明確地" } } }, { number: 188, question: "What is true about Jun Sato?", options: { A: "He is a recent graduate.", B: "He has worked at DataDriven Inc. before.", C: "He meets the experience requirement.", D: "He is an expert in Power BI." }, answer: "C", analysis: { translation: "關於 Jun Sato 的描述，哪項是正確的？", explanation: "職位要求 '5+ years of experience' (5年以上經驗)。Jun Sato 在郵件中說 'I have over six years of experience in the field' (我有超過六年的相關領域經驗)，這表明他符合經驗要求。因此，(C) 是正確答案。", vocab: { "candidate (n.)": "候選人", "consideration (n.)": "考慮" } } }, { number: 189, question: "In the advertisement, the word 'devise' is closest in meaning to", options: { A: "ignore", B: "criticize", C: "create", D: "understand" }, answer: "C", analysis: { translation: "在廣告中，'devise' 這個詞的意思最接近哪個選項？", explanation: "'Devise' 的意思是「設計、想出、策劃」。在上下文中，指的是與團隊合作「制定」策略。因此，(C) 'create' (創造) 是最接近的同義詞。", vocab: { "devise (v.)": "設計；策劃", "data-informed (adj.)": "有數據依據的" } } }, { number: 190, question: "Why did Jun Sato write the e-mail?", options: { A: "To submit his application", B: "To request an extension on the deadline", C: "To withdraw his candidacy", D: "To clarify his eligibility before applying" }, answer: "D", analysis: { translation: "Jun Sato 為何寫這封電子郵件？", explanation: "他寫信的目的是為了確認他的學歷是否符合要求，然後才正式申請。這是一種在申請前確認資格的行為。因此，(D) 是正確答案。", vocab: { "clarify (v.)": "澄清", "eligibility (n.)": "資格" } } } ] },
+    // Questions 191-195
+    { type: 'multiple', layout: 'grid-3', title: 'the following e-mail, order confirmation, and online chat transcript', passages: [{ type: 'E-mail', content: `To: support@tech-loft.com\nFrom: emily.r@email.com\nDate: November 11\nSubject: Issue with Order #78521\n\nDear TechLoft Support,\n\nI am writing about my order #78521, which I placed on November 2. The estimated delivery was November 8, but it is now three days late, and I have not received any shipping confirmation. Could you please provide an update on the status of my order?\n\nI purchased the "AeroPress Go" coffee maker as a birthday gift, and the party is this weekend. I am concerned it will not arrive in time.\n\nThank you,\nEmily Rogers` }, { type: 'Order Confirmation', content: `**TechLoft Order Confirmation**\n\n**Order Number:** #78521\n**Order Date:** November 2\n**Customer:** Emily Rogers\n\n**Item(s):**\n- 1 x AeroPress Go Portable Coffee Maker - $31.95\n- 1 x Filter Pack (350 count) - $4.95\n\n**Subtotal:** $36.90\n**Shipping:** $5.00\n**Total:** $41.90\n\n**Status:** Processing` }, { type: 'Chat Transcript', content: `**Agent:** David (TechLoft Support)\n**Customer:** Emily Rogers\n**Date:** November 12\n\n**David:** Hello Emily, thank you for contacting TechLoft support. I see your e-mail about order #78521. I apologize for the delay.\n\n**David:** It appears there was an unexpected inventory issue with the AeroPress Go coffee maker at our main warehouse. A new shipment just arrived today, and your order is being expedited.\n\n**Emily:** That's a relief to hear. Will it arrive by Friday?\n\n**David:** Yes, we have upgraded your shipping to express delivery at no extra charge. It is guaranteed to arrive by this Friday, November 14. As a further apology, I have also refunded your original $5.00 shipping fee. You will see the credit on your statement in 2-3 business days.\n\n**Emily:** Thank you, David. I appreciate the help.` }], questions: [ { number: 191, question: "Why did Emily Rogers first contact TechLoft?", options: { A: "To cancel her order", B: "To change the shipping address", C: "To inquire about a delivery delay", D: "To return an item" }, answer: "C", analysis: { translation: "Emily Rogers 最初為何聯繫 TechLoft？", explanation: "在第一封電子郵件中，Emily 提到她的訂單比預計送達日期晚了三天，並且她還沒有收到任何運送確認，因此寫信詢問訂單狀態。因此，(C) 是正確答案。", vocab: { "inquire (v.)": "詢問", "delay (n.)": "延遲" } } }, { number: 192, question: "What did the order confirmation indicate on November 11?", options: { A: "The order had been shipped.", B: "The order was ready for pickup.", C: "The order was being processed.", D: "The order was delivered." }, answer: "C", analysis: { translation: "在 11 月 11 日，訂單確認顯示了什麼？", explanation: "訂單確認頁面顯示的 'Status' (狀態) 是 'Processing' (處理中)，這意味著訂單尚未出貨。因此，(C) 是正確答案。", vocab: { "status (n.)": "狀態", "processing (v.)": "處理中" } } }, { number: 193, question: "According to the chat, what caused the problem?", options: { A: "A wrong address was entered.", B: "The item was out of stock.", C: "There was a problem with the payment.", D: "The delivery service was delayed." }, answer: "B", analysis: { translation: "根據聊天記錄，是什麼導致了問題？", explanation: "客服 David 在聊天中解釋說 'there was an unexpected inventory issue' (出現了意料之外的庫存問題)，這意味著商品缺貨了。因此，(B) 是正確答案。", vocab: { "inventory (n.)": "庫存", "warehouse (n.)": "倉庫" } } }, { number: 194, question: "What did David do to resolve the issue?", options: { A: "He offered a discount on a future purchase.", B: "He canceled the order and issued a full refund.", C: "He sent a different model of coffee maker.", D: "He upgraded the shipping and refunded the shipping cost." }, answer: "D", analysis: { translation: "David 做了什麼來解決問題？", explanation: "David 說 'we have upgraded your shipping to express delivery at no extra charge' (我們已免費為您升級為快遞) 並且 'I have also refunded your original $5.00 shipping fee' (我也退還了您原本的 5 美元運費)。因此，(D) 是正確答案。", vocab: { "resolve (v.)": "解決", "expedite (v.)": "加快處理" } } }, { number: 195, question: "When will Emily Rogers most likely receive her order?", options: { A: "November 11", B: "November 12", C: "November 14", D: "November 15" }, answer: "C", analysis: { translation: "Emily Rogers 最有可能在何時收到她的訂單？", explanation: "在聊天記錄中，客服 David 保證 'It is guaranteed to arrive by this Friday, November 14' (保證會在本週五，11 月 14 日前送達)。因此，(C) 是最可能的收貨日期。", vocab: { "guaranteed (adj.)": "有保證的", "credit (n.)": "退款；貸項" } } } ] },
+    // Questions 196-200
+    { type: 'multiple', layout: 'grid-3', title: 'the following article, Web page, and customer review', passages: [{ type: 'Article', content: `**Tech Weekly - October 5**\n\n**GreenThumb Inc. Launches Smart Indoor Garden**\n\nYesterday, consumer electronics company GreenThumb Inc. unveiled its latest innovation, the 'Natura' smart indoor garden. The device aims to make home gardening accessible to everyone, regardless of space or experience. Using a combination of automated LED lighting, self-watering technology, and app-based controls, the Natura promises to grow herbs, vegetables, and flowers with minimal user effort. "We want to bring the joy of fresh produce into every home," said CEO Maria Chen. The product is available for pre-order now and will ship in early November.` }, { type: 'Web Page', content: `**GreenThumb Natura - Product Details**\n\n**Price:** $199\n\n**What's in the box:**\n- Natura smart garden base (with built-in water reservoir and LED light arm)\n- 6 pre-seeded plant pods (Choice of: Basil, Mint, Parsley, Cherry Tomatoes, Lettuce)\n- Liquid plant nutrients\n- Power adapter\n\n**Features:**\n- **Automated Lighting:** Full-spectrum 20W LED light on an automatic day/night cycle.\n- **Self-Watering:** 2-liter reservoir waters plants automatically for up to 3 weeks.\n- **App Control:** The GreenThumb app (iOS/Android) notifies you when to add water or nutrients.\n- **Dimensions:** 15" x 8" x 17" (L x W x H)` }, { type: 'Customer Review', content: `★★★★☆ **Almost Perfect!**\n*Posted by Alex on December 1*\n\nI received my Natura garden two weeks ago and have been very impressed. The setup was incredibly simple, and my basil and mint are already sprouting! The design is sleek and fits perfectly in my small apartment kitchen. The app is intuitive and the notifications are genuinely helpful.\n\nMy only complaint is with the plant pod selection. The starter kit comes with six pods, but you cannot mix and match types; you have to choose one type of herb or vegetable. I would have loved to start with a variety. I see that you can buy other pod types separately, but it would be better if the initial set offered more flexibility.` }], questions: [ { number: 196, question: "What is the main purpose of the Natura smart garden?", options: { A: "To purify indoor air", B: "To make home gardening easier", C: "To teach people about electronics", D: "To decorate modern homes" }, answer: "B", analysis: { translation: "Natura 智能花園的主要用途是什麼？", explanation: "文章中提到，該設備旨在 'make home gardening accessible to everyone' (讓每個人都能進行家庭園藝)，並透過自動化功能 'with minimal user effort' (以最少的使用者精力) 來種植植物。因此，(B) 是正確答案。", vocab: { "unveil (v.)": "揭幕；推出", "accessible (adj.)": "易於得到的；易於使用的" } } }, { number: 197, question: "What is NOT included in the initial purchase?", options: { A: "A water reservoir", B: "Plant food", C: "A variety pack of seeds", D: "An LED light" }, answer: "C", analysis: { translation: "初次購買時不包含什麼？", explanation: "產品網頁的 'What's in the box' 列出了包含的物品。評論者 Alex 也抱怨說，入門套件 'comes with six pods, but you cannot mix and match types' (附有六個豆莢，但不能混搭類型)。這意味著不包含混合種子包 (a variety pack of seeds)。因此，(C) 是正確答案。", vocab: { "reservoir (n.)": "蓄水庫；儲水器", "nutrients (n.)": "養分" } } }, { number: 198, question: "What does Alex complain about?", options: { A: "The device is too large.", B: "The app is difficult to use.", C: "The setup process was complicated.", D: "The lack of variety in the starter pods." }, answer: "D", analysis: { translation: "Alex 抱怨了什麼？", explanation: "Alex 在評論中明確表示 'My only complaint is with the plant pod selection' (我唯一的不滿是植物豆莢的選擇)，並解釋說他希望入門套件能提供更多樣化的選擇。因此，(D) 是正確答案。", vocab: { "complaint (n.)": "抱怨", "flexibility (n.)": "靈活性" } } }, { number: 199, question: "What aspect of the product does Alex praise?", options: { A: "Its price", B: "The speed of delivery", C: "Its ease of use", D: "The quality of the vegetables" }, answer: "C", analysis: { translation: "Alex 稱讚了產品的哪個方面？", explanation: "Alex 提到 'The setup was incredibly simple' (安裝非常簡單) 且 'The app is intuitive' (應用程式很直觀)。這些都指向產品的易用性。因此，(C) 是正確答案。", vocab: { "sleek (adj.)": "時尚的；線條流暢的", "sprout (v.)": "發芽" } } }, { number: 200, question: "In the review, the word 'intuitive' is closest in meaning to", options: { A: "beautiful", B: "fast", C: "easy to understand", D: "detailed" }, answer: "C", analysis: { translation: "在評論中，'intuitive' 這個詞的意思最接近哪個選項？", explanation: "'Intuitive' 在描述軟體或設備時，通常指其設計符合使用者直覺，無需過多學習就能上手。因此，(C) 'easy to understand' (容易理解) 是最接近的同義詞。", vocab: { "intuitive (adj.)": "直觀的", "genuinely (adv.)": "真正地" } } } ] }
+];
+
+let currentPassageIndex = 0;
+const userAnswers = {};
+
+const mainContent = document.getElementById('main-content');
+const passagesArea = document.getElementById('passages-area');
+const questionsContainer = document.getElementById('questions-container');
+const passageTitle = document.getElementById('passage-title');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+const submitBtn = document.getElementById('submit-btn');
+const progressIndicator = document.getElementById('progress-indicator');
+const timerEl = document.getElementById('timer');
+let timerInterval; // 宣告計時器變數
+
+// --- 新增的功能 ---
+
+// 監聽作答，並儲存使用者答案
+questionsContainer.addEventListener('change', (e) => {
+    if (e.target.name.startsWith('q')) {
+        const qNumber = e.target.name.substring(1);
+        userAnswers[qNumber] = e.target.value;
+    }
+});
+
+// 計算分數並顯示結果畫面
+function showResults() {
+    clearInterval(timerInterval); // 停止計時器
+
+    let score = 0;
+    const allQuestions = allPassageSets.flatMap(ps => ps.questions);
+    const totalQuestions = allQuestions.length;
+    
+    allQuestions.forEach(q => {
+        if (userAnswers[q.number] === q.answer) {
+            score++;
+        }
+    });
+
+    // 更新分數統計
+    document.getElementById('score-val').textContent = score;
+    document.getElementById('total-q').textContent = totalQuestions;
+    const percentage = totalQuestions > 0 ? ((score / totalQuestions) * 100).toFixed(1) : 0;
+    document.getElementById('score-percent').textContent = `${percentage}%`;
+    
+    // 產生結果摘要
+    const summaryGrid = document.getElementById('summary-grid');
+    summaryGrid.innerHTML = '';
+    allQuestions.forEach(q => {
+        const isCorrect = userAnswers[q.number] === q.answer;
+        const summaryItem = document.createElement('a');
+        summaryItem.href = `#analysis-q-${q.number}`; // 更新錨點以避免衝突
+        summaryItem.className = `p-2 text-center rounded transition-transform transform hover:scale-110 ${isCorrect ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`;
+        summaryItem.textContent = q.number;
+        // 點擊題號直接跳到詳解頁面
+        summaryItem.addEventListener('click', (e) => {
+            e.preventDefault();
+            reviewAnswers();
+            document.getElementById(`analysis-q-${q.number}`).scrollIntoView({ behavior: 'smooth' });
+        });
+        summaryGrid.appendChild(summaryItem);
+    });
+
+    document.getElementById('test-container').classList.add('hidden');
+    document.getElementById('results-container').classList.remove('hidden');
+}
+
+// 顯示所有題目的詳解
+function reviewAnswers() {
+    document.getElementById('results-container').classList.add('hidden');
+    document.getElementById('analysis-container').classList.remove('hidden');
+    
+    const analysisContent = document.getElementById('analysis-container');
+    // 加上標題和返回按鈕
+    analysisContent.innerHTML = `
+        <div class="flex justify-between items-center mb-8 sticky top-0 bg-gray-100 py-4 z-10">
+            <h2 class="text-3xl font-bold">測驗詳解</h2>
+            <button id="back-to-results-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">返回結果</button>
+        </div>
+    `;
+
+    allPassageSets.flatMap(ps => ps.questions).forEach(q => {
+        const questionDiv = document.createElement('div');
+        questionDiv.id = `analysis-q-${q.number}`; // 更新ID以避免衝突
+        questionDiv.className = 'mb-8 p-6 bg-white shadow-md rounded-lg';
+
+        let optionsHtml = '';
+        for (const [key, value] of Object.entries(q.options)) {
+            const isCorrect = key === q.answer;
+            const isUserChoice = userAnswers[q.number] === key;
+            let labelClass = 'option-label block p-3 border rounded-lg mt-2';
+            if (isCorrect) {
+                labelClass += ' bg-green-100 border-green-400 font-bold'; // 正確答案
+            } else if (isUserChoice && !isCorrect) {
+                labelClass += ' bg-red-100 border-red-400 line-through'; // 使用者選的錯誤答案
+            }
+            optionsHtml += `<div><label class="${labelClass}"><span class="font-bold mr-2">(${key})</span> ${value}</label></div>`;
+        }
+
+        let vocabHtml = '<ul class="list-disc list-inside mt-2 space-y-1">';
+        for (const [word, meaning] of Object.entries(q.analysis.vocab)) {
+            vocabHtml += `<li><strong class="font-semibold">${word}</strong>: ${meaning}</li>`;
+        }
+        vocabHtml += '</ul>';
+
+        questionDiv.innerHTML = `
+            <p class="font-semibold text-lg text-gray-800">${q.number}. ${q.question}</p>
+            <div class="mt-3">${optionsHtml}</div>
+            <div class="mt-4 p-4 border-l-4 border-blue-500 bg-blue-50 rounded-r-lg">
+                <p><strong>正確答案：</strong> <span class="font-bold text-green-600">(${q.answer})</span></p>
+                <p class="mt-2"><strong>題目翻譯：</strong> ${q.analysis.translation}</p>
+                <p class="mt-2"><strong>題目解析：</strong> ${q.analysis.explanation}</p>
+                <div class="mt-2"><strong class="text-gray-700">重點單字：</strong>${vocabHtml}</div>
+            </div>
+        `;
+        analysisContent.appendChild(questionDiv);
+    });
+
+    // 為新的返回按鈕加上事件
+    document.getElementById('back-to-results-btn').addEventListener('click', () => {
+        document.getElementById('analysis-container').classList.add('hidden');
+        document.getElementById('results-container').classList.remove('hidden');
+        window.scrollTo(0, 0);
+    });
+
+    window.scrollTo(0, 0);
+}
+
+// 為「提交」、「查看詳解」和「重新開始」按鈕加上事件
+submitBtn.addEventListener('click', showResults);
+document.getElementById('review-btn').addEventListener('click', reviewAnswers);
+document.getElementById('restart-btn').addEventListener('click', () => {
+    location.reload(); // 重新載入頁面，達到重新開始的效果
+});
+document.getElementById('reviex-btn').addEventListener('click', () => {
+       
+        window.location.href = 'index.html';
+    });
+
+function loadPassageSet(index) {
+    const passageSet = allPassageSets[index];
+    
+    // Clear previous content
+    passagesArea.innerHTML = '';
+    questionsContainer.innerHTML = '';
+
+    // Set title
+    const firstQuestionNum = passageSet.questions[0].number;
+    const lastQuestionNum = passageSet.questions[passageSet.questions.length - 1].number;
+    passageTitle.textContent = `Questions ${firstQuestionNum}-${lastQuestionNum} refer to ${passageSet.title}.`;
+
+    // Load passages
+    passagesArea.className = passageSet.layout === 'grid-cols-2' ? 'grid lg:grid-cols-2 gap-6' : 
+                              passageSet.layout === 'grid-cols-3' ? 'passages-grid-3' : '';
+    passageSet.passages.forEach(passage => {
+        const passageDiv = document.createElement('div');
+        passageDiv.className = 'passage-container';
+        passageDiv.innerHTML = `
+            <h3 class="text-lg font-bold mb-2 text-gray-800">${passage.type}</h3>
+            <div class="passage-content">${passage.content.replace(/\n/g, '<br>')}</div>
+        `;
+        passagesArea.appendChild(passageDiv);
+    });
+
+    // Load questions
+    passageSet.questions.forEach(q => {
+        const questionDiv = document.createElement('div');
+        questionDiv.id = `question-${q.number}`;
+        let optionsHtml = '';
+        for (const [key, value] of Object.entries(q.options)) {
+            optionsHtml += `
+                <div class="mt-2">
+                    <input type="radio" id="q${q.number}_${key}" name="q${q.number}" value="${key}" class="sr-only">
+                    <label for="q${q.number}_${key}" class="option-label block p-3 border rounded-lg cursor-pointer transition-colors">
+                        <span class="font-bold mr-2">(${key})</span> ${value}
+                    </label>
+                </div>
+            `;
+        }
+        questionDiv.innerHTML = `
+            <p class="font-semibold text-gray-800">${q.number}. ${q.question}</p>
+            <div class="mt-2">${optionsHtml}</div>
+            <div id="analysis-${q.number}" class="hidden mt-4 p-4 border-l-4 border-blue-400 bg-blue-50"></div>
+        `;
+        questionsContainer.appendChild(questionDiv);
+
+        // 當載入題組時，還原之前選過的答案
+        if (userAnswers[q.number]) {
+            const selectedRadio = document.getElementById(`q${q.number}_${userAnswers[q.number]}`);
+            if (selectedRadio) {
+                selectedRadio.checked = true;
+            }
+        }
+    });
+
+    updateNavigation();
+}
+
+function updateNavigation() {
+    progressIndicator.textContent = `題組 ${currentPassageIndex + 1} / ${allPassageSets.length}`;
+    prevBtn.disabled = currentPassageIndex === 0;
+    // 移除行末錯誤的 "Pass"
+    nextBtn.disabled = currentPassageIndex === allPassageSets.length - 1;
+    
+    // 這段邏輯現在可以正常執行了
+    if (currentPassageIndex === allPassageSets.length - 1) {
+        nextBtn.classList.add('hidden');
+        submitBtn.classList.remove('hidden');
+    } else {
+        nextBtn.classList.remove('hidden');
+        submitBtn.classList.add('hidden');
+    }
+}
+
+function startTimer() {
+    let time = 55 * 60;
+    timerInterval = setInterval(() => {
+        time--;
+        const minutes = Math.floor(time / 60).toString().padStart(2, '0');
+        const seconds = (time % 60).toString().padStart(2, '0');
+        timerEl.textContent = `${minutes}:${seconds}`;
+        if (time <= 0) {
+            clearInterval(timerInterval);
+            showResults(); // 時間到自動提交
+        }
+    }, 1000);
+}
+
+prevBtn.addEventListener('click', () => {
+    if (currentPassageIndex > 0) {
+        currentPassageIndex--;
+        loadPassageSet(currentPassageIndex);
+    }
+});
+
+nextBtn.addEventListener('click', () => {
+    if (currentPassageIndex < allPassageSets.length - 1) {
+        currentPassageIndex++;
+        loadPassageSet(currentPassageIndex);
+    }
+});
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => {
+    loadPassageSet(currentPassageIndex);
+    startTimer();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOEIC Part 4 模擬測驗</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #f0f4f8;
+            color: #334155;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            margin-top: 20px; /* Add some margin from the top */
+        }
+        .question-option {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+        }
+        .question-option:hover:not(.disabled) {
+            background-color: #e0f2fe;
+            border-color: #90cdf4;
+        }
+        .question-option.selected {
+            background-color: #bfdbfe;
+            border-color: #60a5fa;
+            font-weight: bold;
+        }
+        .question-option.correct {
+            background-color: #d1fae5;
+            border-color: #34d399;
+            font-weight: bold;
+        }
+        .question-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            font-weight: bold;
+        }
+        .question-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .explanation-section {
+            background-color: #f0f9ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+            margin-left: auto;
+            margin-right: auto;
+            text-align: left;
+        }
+        .explanation-section h3 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        .explanation-section p {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        .button-primary, .button-secondary, .button-play-audio, .button-next-part {
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+        }
+        .button-primary:hover:not(.disabled) {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .button-secondary {
+            background-color: #6b7280;
+        }
+        .button-secondary:hover:not(.disabled) {
+            background-color: #4b5563;
+        }
+        .button-play-audio {
+            background-color: #10b981; /* Green */
+        }
+        .button-play-audio:hover:not(.disabled) {
+            background-color: #059669;
+        }
+        .button-next-part {
+            background-color: #f97316; /* Orange */
+        }
+        .button-next-part:hover:not(.disabled) {
+            background-color: #ea580c;
+        }
+        .button-primary.disabled, .button-secondary.disabled, .button-play-audio.disabled, .button-next-part.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+        }
+        .monologue-transcript {
+            background-color: #e0f7fa; /* Light blue background for transcript */
+            border: 1px solid #80deea;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-style: italic;
+            color: #006064;
+            display: none; /* Hidden by default, shown in explanation */
+        }
+        .question-text-display {
+            background-color: #f3f9f9; /* Slightly different background for question text */
+            border: 1px solid #cce5e5;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-6">TOEIC Part 4 模擬測驗</h1>
+
+        <div id="test-area">
+            <h2 class="text-2xl font-bold text-gray-700 mb-6 text-center">Part 4: Short Talks (簡短獨白)</h2>
+
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-lg font-semibold text-gray-700">
+                    問題 <span id="current-question-number">1</span> / <span id="total-questions">30</span>
+                </span>
+                <div class="flex gap-2">
+                    <button id="play-monologue-btn" class="button-play-audio">播放獨白</button>
+                    <button id="play-question-btn" class="button-play-audio">播放問題</button>
+                    <button id="play-options-btn" class="button-play-audio">播放選項</button>
+                </div>
+            </div>
+
+            <!-- Monologue Transcript (hidden during test, shown in explanation) -->
+            <div id="monologue-transcript-display" class="monologue-transcript">
+                <p id="monologue-text-content" class="text-gray-800"></p>
+            </div>
+
+            <!-- Question Text Display (always visible for Part 4) -->
+            <div id="question-text-display" class="question-text-display">
+                <p id="question-text-content" class="text-gray-800"></p>
+            </div>
+
+            <!-- Options -->
+            <div id="options-container" class="mb-8">
+                <!-- Options will be dynamically loaded here -->
+            </div>
+
+            <!-- Navigation and Action Buttons -->
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
+                <button id="prev-btn" class="button-secondary" style="display: none;">上一題</button>
+                <button id="submit-answer-btn" class="button-primary">提交答案</button>
+                <button id="show-explanation-btn" class="button-secondary" style="display: none;">查看詳解</button>
+                <button id="next-btn" class="button-primary" style="display: none;">下一題</button>
+            </div>
+
+            <!-- Explanation Section -->
+            <div id="explanation-display" class="explanation-section">
+                <h3 class="text-xl font-bold mb-3">詳解</h3>
+                <h4 class="text-lg font-semibold text-blue-800 mb-2">官方解析：</h4>
+                <p id="official-explanation" class="text-gray-700 mb-4"></p>
+                <h4 class="text-lg font-semibold text-blue-800 mb-2">詞彙補充：</h4>
+                <p id="vocabulary-explanation" class="text-gray-700 mb-4"></p>
+                <h4 class="text-lg font-semibold text-blue-800 mb-2">選項分析：</h4>
+                <p id="analysis-explanation" class="text-gray-700 mb-4"></p>
+            </div>
+
+            <!-- Status Message -->
+            <div id="status-message" class="status-message" style="display: none;"></div>
+        </div>
+
+        <div id="completion-area" class="text-center mt-10 p-8 bg-blue-50 rounded-lg shadow-inner" style="display: none;">
+            <h2 class="text-3xl font-bold text-blue-800 mb-4">Part 4 測驗完成！</h2>
+            <p class="text-xl text-gray-700 mb-6">您已完成所有 Part 4 題目。</p>
+            <button id="next-part-btn" class="button-next-part text-lg px-6 py-3 mr-4">前往 Part 5</button>
+            <button id="restart-test-btn" class="button-secondary text-lg px-6 py-3">重新開始 Part 4</button>
+        </div>
+    </div>
+
+    <script>
+        // Global state variables (declared once at the very top of the script)
+        let currentQuestionIndex = 0;
+        const totalQuestionsCount = 30; // Explicitly set total questions for Part 4
+        let userAnswers = new Array(totalQuestionsCount).fill(null);
+        let isExplanationMode = false;
+        let speechUtterance = null;
+        let isSpeaking = false;
+        let currentOptionIndex = 0; 
+
+        // All TOEIC Part 4 Questions (10 monologue groups, 3 questions each = 30 questions)
+        const allQuestions = [
+            {
+                id: "P4-M01", part: 4, type: "Short Talk",
+                monologueAudioText: "Good morning, everyone. I'm excited to announce the launch of Project Horizon, our new initiative aimed at streamlining our global supply chain. This project is critical for enhancing our operational efficiency and reducing costs across all departments. We anticipate a significant improvement in delivery times and overall customer satisfaction. The core team, led by Ms. Evelyn Reed from Logistics, has been working tirelessly for the past six months to bring this vision to fruition. We'll be holding a mandatory informational session next Tuesday at 10 AM in Conference Room B for all department heads to discuss implementation strategies and answer any initial questions. Your full cooperation is essential for the success of Project Horizon.",
+                questions: [
+                    {
+                        questionId: "P4-Q01",
+                        questionAudioText: "What is the main purpose of Project Horizon?",
+                        questionText: "What is the main purpose of Project Horizon?",
+                        optionsAudioText: [
+                            "To increase marketing efforts.",
+                            "To improve employee morale.",
+                            "To enhance supply chain efficiency.",
+                            "To develop new product lines."
+                        ],
+                        correctAnswerText: "To enhance supply chain efficiency.",
+                        explanation: {
+                            official: "獨白中提到 'our new initiative aimed at streamlining our global supply chain'，明確指出 Project Horizon 的主要目標是提升供應鏈效率。",
+                            vocabulary: "streamlining (簡化，效率化), global supply chain (全球供應鏈), operational efficiency (營運效率), reduce costs (降低成本).",
+                            analysis: "選項 A、B、D 未在獨白中提及為主要目的。選項 C 直接呼應了獨白中的關鍵信息。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q02",
+                        questionAudioText: "Who is leading the core team for this project?",
+                        questionText: "Who is leading the core team for this project?",
+                        optionsAudioText: [
+                            "The speaker of the announcement.",
+                            "Ms. Evelyn Reed.",
+                            "A representative from the Marketing department.",
+                            "The head of the Finance department."
+                        ],
+                        correctAnswerText: "Ms. Evelyn Reed.",
+                        explanation: {
+                            official: "獨白中明確提到 'The core team, led by Ms. Evelyn Reed from Logistics, has been working tirelessly...'，指出 Evelyn Reed 負責領導核心團隊。",
+                            vocabulary: "core team (核心團隊), tirelessly (不倦地), logistics (物流).",
+                            analysis: "獨白中清楚指出了領導者的姓名，其他選項均不符合。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q03",
+                        questionAudioText: "What is scheduled for next Tuesday?",
+                        questionText: "What is scheduled for next Tuesday?",
+                        optionsAudioText: [
+                            "A project launch party.",
+                            "A mandatory informational session.",
+                            "A meeting with external stakeholders.",
+                            "A customer satisfaction survey."
+                        ],
+                        correctAnswerText: "A mandatory informational session.",
+                        explanation: {
+                            official: "獨白中提到 'We'll be holding a mandatory informational session next Tuesday at 10 AM...'，因此下週二的活動是一場強制性的說明會。",
+                            vocabulary: "mandatory (強制性的), informational session (說明會), implementation strategies (實施策略), cooperation (合作).",
+                            analysis: "選項 A、C、D 均未在獨白中提及。獨白直接說明了下週二的安排。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P4-M02", part: 4, type: "Short Talk",
+                monologueAudioText: "Hello, Mr. Davies. This is Sarah Chen from Apex Solutions. I'm calling to follow up on our discussion regarding the software upgrade for your accounting system. I understand you had some concerns about the integration process. I've consulted with our technical team, and they've assured me that the transition will be seamless, with minimal downtime. We've also prepared a detailed implementation plan tailored to your company's specific needs. Could you please call me back at your earliest convenience to discuss this further? My direct line is 555-0123. Thank you.",
+                questions: [
+                    {
+                        questionId: "P4-Q04",
+                        questionAudioText: "What is the purpose of the call?",
+                        questionText: "What is the purpose of the call?",
+                        optionsAudioText: [
+                            "To offer a new product.",
+                            "To discuss a software upgrade.",
+                            "To schedule a technical support visit.",
+                            "To confirm a payment."
+                        ],
+                        correctAnswerText: "To discuss a software upgrade.",
+                        explanation: {
+                            official: "獨白開頭即表明 'I'm calling to follow up on our discussion regarding the software upgrade for your accounting system.'，明確了電話的目的。",
+                            vocabulary: "follow up on (追蹤), software upgrade (軟體升級), accounting system (會計系統), integration process (整合過程).",
+                            analysis: "選項 A、C、D 均不符合獨白內容。通話的重點是關於軟體升級的討論。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q05",
+                        questionAudioText: "What concern did Mr. Davies have?",
+                        questionText: "What concern did Mr. Davies have?",
+                        optionsAudioText: [
+                            "The cost of the upgrade.",
+                            "The training for employees.",
+                            "The integration process.",
+                            "The security of the data."
+                        ],
+                        correctAnswerText: "The integration process.",
+                        explanation: {
+                            official: "獨白中提到 'I understand you had some concerns about the integration process.'，直接指出了 Mr. Davies 的疑慮。",
+                            vocabulary: "concerns (擔憂), seamless (無縫的), minimal downtime (最短停機時間), tailored (量身訂做).",
+                            analysis: "獨白直接點出 Mr. Davies 擔憂的是整合過程，而非其他選項。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q06",
+                        questionAudioText: "What does the speaker ask Mr. Davies to do?",
+                        questionText: "What does the speaker ask Mr. Davies to do?",
+                        optionsAudioText: [
+                            "Send an email.",
+                            "Visit their office.",
+                            "Call her back.",
+                            "Review the detailed plan."
+                        ],
+                        correctAnswerText: "Call her back.",
+                        explanation: {
+                            official: "獨白結尾處說到 'Could you please call me back at your earliest convenience to discuss this further?'，要求 Mr. Davies 回電。",
+                            vocabulary: "earliest convenience (盡早方便時), direct line (直線電話).",
+                            analysis: "選項 A、B、D 均未被提及。講者明確要求對方回電以進一步討論。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P4-M03", part: 4, type: "Short Talk",
+                monologueAudioText: "Are you tired of slow internet speeds and unreliable connections? Look no further! SpeedLink Pro is here to revolutionize your online experience. Our cutting-edge fiber optic technology delivers unparalleled speeds, allowing you to stream, game, and work without interruption. For a limited time, new customers can enjoy our premium package at a 30% discount for the first six months. Plus, we're offering a free installation for the first 100 sign-ups this week. Visit our website at SpeedLinkPro.com or call us today to secure this exclusive offer. Don't miss out on the future of connectivity!",
+                questions: [
+                    {
+                        questionId: "P4-Q07",
+                        questionAudioText: "What product is being advertised?",
+                        questionText: "What product is being advertised?",
+                        optionsAudioText: [
+                            "A new smartphone.",
+                            "A high-speed internet service.",
+                            "A gaming console.",
+                            "A video streaming platform."
+                        ],
+                        correctAnswerText: "A high-speed internet service.",
+                        explanation: {
+                            official: "獨白中多次提到 'slow internet speeds', 'fiber optic technology', 'unparalleled speeds', 'connectivity'，清楚表明廣告的是高速網路服務。",
+                            vocabulary: "revolutionize (徹底改變), cutting-edge (尖端的), fiber optic technology (光纖技術), unparalleled (無與倫比的), connectivity (連接性).",
+                            analysis: "獨白的核心是解決網路速度問題，並推廣其光纖技術，因此選項 B 是正確答案。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q08",
+                        questionAudioText: "What special offer is available for new customers?",
+                        questionText: "What special offer is available for new customers?",
+                        optionsAudioText: [
+                            "A free trial for one month.",
+                            "A 50% discount on installation.",
+                            "A 30% discount for the first six months.",
+                            "A free router upgrade."
+                        ],
+                        correctAnswerText: "A 30% discount for the first six months.",
+                        explanation: {
+                            official: "獨白中提到 'new customers can enjoy our premium package at a 30% discount for the first six months.'，這是針對新客戶的特別優惠。",
+                            vocabulary: "limited time offer (限時優惠), premium package (高級方案), discount (折扣), sign-ups (註冊人數).",
+                            analysis: "獨白明確指出了折扣的百分比和持續時間，其他選項不符。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q09",
+                        questionAudioText: "How can listeners secure the offer?",
+                        questionText: "How can listeners secure the offer?",
+                        optionsAudioText: [
+                            "By visiting a physical store.",
+                            "By sending a text message.",
+                            "By visiting the website or calling.",
+                            "By returning a mail-in coupon."
+                        ],
+                        correctAnswerText: "By visiting the website or calling.",
+                        explanation: {
+                            official: "獨白結尾處說到 'Visit our website at SpeedLinkPro.com or call us today to secure this exclusive offer.'，提供了兩種方式。",
+                            vocabulary: "secure (獲得，確保), exclusive offer (獨家優惠).",
+                            analysis: "獨白明確提供了兩種聯繫方式來獲取優惠，其他選項未提及。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P4-M04", part: 4, type: "Short Talk",
+                monologueAudioText: "Attention all residents of Willow Creek. This is a public service announcement from the City Council regarding the upcoming annual community clean-up day. This year, we're focusing on revitalizing our local parks and green spaces. Volunteers are needed to help with litter collection, planting new trees, and general landscaping. The event will take place on Saturday, October 26th, from 9 AM to 3 PM, starting at the Town Square. Refreshments and tools will be provided. Please register online at WillowCreek.gov by October 20th so we can ensure we have enough supplies for everyone. Let's work together to keep our community beautiful!",
+                questions: [
+                    {
+                        questionId: "P4-Q10",
+                        questionAudioText: "What is the purpose of the announcement?",
+                        questionText: "What is the purpose of the announcement?",
+                        optionsAudioText: [
+                            "To inform about a new park opening.",
+                            "To recruit volunteers for a clean-up event.",
+                            "To announce a city council meeting.",
+                            "To promote a local gardening club."
+                        ],
+                        correctAnswerText: "To recruit volunteers for a clean-up event.",
+                        explanation: {
+                            official: "獨白開頭即說明 'This is a public service announcement from the City Council regarding the upcoming annual community clean-up day.'，並隨後呼籲志工參與，因此主要目的是招募志工。",
+                            vocabulary: "public service announcement (公共服務廣播), City Council (市議會), annual (每年的), community clean-up day (社區清潔日), revitalizing (復興，活化).",
+                            analysis: "獨白的核心是關於社區清潔日，並明確指出需要志工協助，選項 B 最符合主旨。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q11",
+                        questionAudioText: "What tasks will volunteers be asked to do?",
+                        questionText: "What tasks will volunteers be asked to do?",
+                        optionsAudioText: [
+                            "Organize a fundraising event.",
+                            "Collect litter and plant trees.",
+                            "Conduct a local survey.",
+                            "Attend a training workshop."
+                        ],
+                        correctAnswerText: "Collect litter and plant trees.",
+                        explanation: {
+                            official: "獨白中提到 'Volunteers are needed to help with litter collection, planting new trees, and general landscaping.'，列出了志工的任務。",
+                            vocabulary: "litter collection (垃圾收集), planting new trees (種植新樹), landscaping (景觀美化).",
+                            analysis: "獨白直接列出了志工將要執行的具體任務，選項 B 涵蓋了其中兩項主要任務。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q12",
+                        questionAudioText: "What should volunteers do by October 20th?",
+                        questionText: "What should volunteers do by October 20th?",
+                        optionsAudioText: [
+                            "Pick up their tools.",
+                            "Report to the Town Square.",
+                            "Register online.",
+                            "Attend a preliminary meeting."
+                        ],
+                        correctAnswerText: "Register online.",
+                        explanation: {
+                            official: "獨白中明確指示 'Please register online at WillowCreek.gov by October 20th...'，要求志工在此日期前線上註冊。",
+                            vocabulary: "register online (線上註冊), ensure (確保), supplies (物資).",
+                            analysis: "獨白清楚說明了在 10 月 20 日前需要完成的動作，即線上註冊。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P4-M05", part: 4, type: "Short Talk",
+                monologueAudioText: "Welcome, everyone, to the historic Grand Central Terminal! As you can see, this architectural marvel is not just a transportation hub, but a testament to early 20th-century design and engineering. Before we proceed to the main concourse, I'd like to draw your attention to the celestial ceiling mural above us, depicting constellations and astronomical symbols. It's a truly breathtaking sight. Please note that photography is permitted, but flash photography is prohibited to preserve the artwork. Our tour will culminate at the famous Whispering Gallery, where you can experience its unique acoustic properties. Feel free to ask any questions as we go.",
+                questions: [
+                    {
+                        questionId: "P4-Q13",
+                        questionAudioText: "Where is the speaker giving this talk?",
+                        questionText: "Where is the speaker giving this talk?",
+                        optionsAudioText: [
+                            "At a museum.",
+                            "At an airport.",
+                            "At a train station.",
+                            "At a planetarium."
+                        ],
+                        correctAnswerText: "At a train station.",
+                        explanation: {
+                            official: "獨白開頭即歡迎聽眾來到 'the historic Grand Central Terminal'，Grand Central Terminal 是一個著名的火車站。",
+                            vocabulary: "historic (歷史性的), architectural marvel (建築奇蹟), transportation hub (交通樞紐), testament (證明).",
+                            analysis: "獨白明確指出了地點是 Grand Central Terminal，這是一個火車站，選項 C 最符合。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q14",
+                        questionAudioText: "What is prohibited during photography?",
+                        questionText: "What is prohibited during photography?",
+                        optionsAudioText: [
+                            "Using a smartphone.",
+                            "Taking videos.",
+                            "Using flash photography.",
+                            "Sharing photos online."
+                        ],
+                        correctAnswerText: "Using flash photography.",
+                        explanation: {
+                            official: "獨白中明確提到 'Please note that photography is permitted, but flash photography is prohibited to preserve the artwork.'，禁止使用閃光燈。",
+                            vocabulary: "permitted (允許的), prohibited (禁止的), preserve (保存), artwork (藝術品).",
+                            analysis: "獨白清楚說明了攝影的限制，即禁止閃光燈，以保護藝術品。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q15",
+                        questionAudioText: "Where will the tour conclude?",
+                        questionText: "Where will the tour conclude?",
+                        optionsAudioText: [
+                            "At the main concourse.",
+                            "At the celestial ceiling.",
+                            "At the Whispering Gallery.",
+                            "At the ticket booth."
+                        ],
+                        correctAnswerText: "At the Whispering Gallery.",
+                        explanation: {
+                            official: "獨白中提到 'Our tour will culminate at the famous Whispering Gallery...'，表示旅程將在 Whispering Gallery 結束。",
+                            vocabulary: "culminate (達到頂點，告終), unique acoustic properties (獨特的聲學特性).",
+                            analysis: "獨白明確指出旅程的終點是 Whispering Gallery，其他選項不符。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P4-M06", part: 4, type: "Short Talk",
+                monologueAudioText: "Good evening. This is your nightly economic update. The latest indicators suggest a mixed outlook for the coming quarter. While consumer spending has shown a slight uptick, manufacturing output continues to lag behind expectations. Analysts are closely watching the housing market, which has seen fluctuating prices in recent months. The central bank's decision on interest rates next month will be crucial in determining the overall trajectory of the economy. We'll have more details on these developments in tomorrow's morning report. For a deeper dive, visit our website at GlobalFinanceNews.com.",
+                questions: [
+                    {
+                        questionId: "P4-Q16",
+                        questionAudioText: "What is the main topic of this report?",
+                        questionText: "What is the main topic of this report?",
+                        optionsAudioText: [
+                            "Consumer spending habits.",
+                            "Global stock market trends.",
+                            "The current economic outlook.",
+                            "New manufacturing technologies."
+                        ],
+                        correctAnswerText: "The current economic outlook.",
+                        explanation: {
+                            official: "獨白開頭即表明 'This is your nightly economic update. The latest indicators suggest a mixed outlook for the coming quarter.'，顯示報告的主要內容是當前的經濟展望。",
+                            vocabulary: "economic update (經濟更新), indicators (指標), mixed outlook (好壞參半的前景), consumer spending (消費者支出), manufacturing output (製造業產出).",
+                            analysis: "獨白涵蓋了消費者支出、製造業、房市和央行利率等多個經濟層面，因此最能概括其主題的是當前經濟展望。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q17",
+                        questionAudioText: "What is mentioned about the housing market?",
+                        questionText: "What is mentioned about the housing market?",
+                        optionsAudioText: [
+                            "It has seen stable growth.",
+                            "It is experiencing a boom.",
+                            "It has seen fluctuating prices.",
+                            "It is expected to decline sharply."
+                        ],
+                        correctAnswerText: "It has seen fluctuating prices.",
+                        explanation: {
+                            official: "獨白中提到 'the housing market, which has seen fluctuating prices in recent months.'，指出房市價格波動。",
+                            vocabulary: "housing market (房市), fluctuating prices (價格波動), crucial (關鍵的), trajectory (軌跡).",
+                            analysis: "獨白直接說明了房市的狀況是價格波動，其他選項不符合。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q18",
+                        questionAudioText: "What will be crucial next month?",
+                        questionText: "What will be crucial next month?",
+                        optionsAudioText: [
+                            "A new housing policy.",
+                            "The central bank's decision on interest rates.",
+                            "The release of manufacturing data.",
+                            "A consumer confidence report."
+                        ],
+                        correctAnswerText: "The central bank's decision on interest rates.",
+                        explanation: {
+                            official: "獨白中明確指出 'The central bank's decision on interest rates next month will be crucial...'，這是下個月的關鍵事件。",
+                            vocabulary: "central bank (中央銀行), interest rates (利率), developments (發展).",
+                            analysis: "獨白直接說明了中央銀行關於利率的決定將是關鍵，其他選項未提及或非關鍵。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P4-M07", part: 4, type: "Short Talk",
+                monologueAudioText: "Welcome to this training session on our new inventory management software, 'StockFlow'. This system is designed to provide real-time tracking of all our products, from warehouse entry to customer delivery. Before we dive into the interface, I want to emphasize the importance of accurate data entry. Any errors at the initial stage can cascade throughout the entire supply chain, leading to significant discrepancies. Please ensure you follow the data entry protocol meticulously. If you encounter any issues during your practice exercises, please refer to the troubleshooting guide available on the company intranet. Your proficiency with StockFlow is vital for our operational efficiency.",
+                questions: [
+                    {
+                        questionId: "P4-Q19",
+                        questionAudioText: "What is the main topic of the training session?",
+                        questionText: "What is the main topic of the training session?",
+                        optionsAudioText: [
+                            "Customer service protocols.",
+                            "New marketing strategies.",
+                            "Inventory management software.",
+                            "Warehouse safety procedures."
+                        ],
+                        correctAnswerText: "Inventory management software.",
+                        explanation: {
+                            official: "獨白開頭即說明 'Welcome to this training session on our new inventory management software, 'StockFlow'.'，明確了培訓的主題。",
+                            vocabulary: "inventory management software (庫存管理軟體), real-time tracking (即時追蹤), warehouse entry (入庫), customer delivery (客戶交貨).",
+                            analysis: "獨白的主題明確指向新的庫存管理軟體，選項 C 是正確答案。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q20",
+                        questionAudioText: "What is emphasized regarding data entry?",
+                        questionText: "What is emphasized regarding data entry?",
+                        optionsAudioText: [
+                            "Its speed.",
+                            "Its accuracy.",
+                            "Its complexity.",
+                            "Its frequency."
+                        ],
+                        correctAnswerText: "Its accuracy.",
+                        explanation: {
+                            official: "獨白中提到 'I want to emphasize the importance of accurate data entry. Any errors at the initial stage can cascade...'，強調了數據輸入的準確性。",
+                            vocabulary: "emphasize (強調), accurate data entry (準確的數據輸入), cascade (連鎖反應), discrepancies (差異，不符).",
+                            analysis: "獨白明確指出準確性對於避免錯誤的重要性，選項 B 是正確答案。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q21",
+                        questionAudioText: "Where can users find help with issues?",
+                        questionText: "Where can users find help with issues?",
+                        optionsAudioText: [
+                            "By calling customer support.",
+                            "By consulting the troubleshooting guide.",
+                            "By asking a colleague.",
+                            "By sending an email to the IT department."
+                        ],
+                        correctAnswerText: "By consulting the troubleshooting guide.",
+                        explanation: {
+                            official: "獨白中指示 'If you encounter any issues during your practice exercises, please refer to the troubleshooting guide available on the company intranet.'，建議查閱故障排除指南。",
+                            vocabulary: "encounter issues (遇到問題), troubleshooting guide (故障排除指南), company intranet (公司內部網路), proficiency (熟練度).",
+                            analysis: "獨白直接提供了尋求幫助的方式，即查閱故障排除指南，其他選項未提及。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P4-M08", part: 4, type: "Short Talk",
+                monologueAudioText: "Good morning, listeners. Here's your local weather forecast. We're expecting clear skies and mild temperatures throughout the day, with highs reaching 25 degrees Celsius. However, a cold front is anticipated to move in overnight, bringing with it a significant drop in temperature and intermittent showers beginning early tomorrow morning. Residents are advised to prepare for adverse driving conditions, especially during the morning commute. The weekend outlook remains uncertain, with a possibility of heavier precipitation. Please stay tuned to our station for further updates.",
+                questions: [
+                    {
+                        questionId: "P4-Q22",
+                        questionAudioText: "What is the weather expected to be like today?",
+                        questionText: "What is the weather expected to be like today?",
+                        optionsAudioText: [
+                            "Heavy rain.",
+                            "Clear skies and mild temperatures.",
+                            "Strong winds.",
+                            "Freezing temperatures."
+                        ],
+                        correctAnswerText: "Clear skies and mild temperatures.",
+                        explanation: {
+                            official: "獨白中提到 'We're expecting clear skies and mild temperatures throughout the day...'，描述了今天的天氣狀況。",
+                            vocabulary: "local weather forecast (當地天氣預報), clear skies (晴朗的天空), mild temperatures (溫和的氣溫), highs (最高溫).",
+                            analysis: "獨白直接說明了今天的天氣預期，選項 B 是正確答案。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q23",
+                        questionAudioText: "What is anticipated to happen overnight?",
+                        questionText: "What is anticipated to happen overnight?",
+                        optionsAudioText: [
+                            "A heatwave.",
+                            "A cold front and showers.",
+                            "A thunderstorm.",
+                            "Heavy snowfall."
+                        ],
+                        correctAnswerText: "A cold front and showers.",
+                        explanation: {
+                            official: "獨白中提到 'However, a cold front is anticipated to move in overnight, bringing with it a significant drop in temperature and intermittent showers beginning early tomorrow morning.'，預計夜間將有冷鋒和陣雨。",
+                            vocabulary: "cold front (冷鋒), anticipated (預期的), significant drop (顯著下降), intermittent showers (間歇性陣雨).",
+                            analysis: "獨白明確預測了夜間將發生的天氣變化，選項 B 是正確答案。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q24",
+                        questionAudioText: "What are residents advised to prepare for?",
+                        questionText: "What are residents advised to prepare for?",
+                        optionsAudioText: [
+                            "Outdoor activities.",
+                            "Increased traffic.",
+                            "Adverse driving conditions.",
+                            "Power outages."
+                        ],
+                        correctAnswerText: "Adverse driving conditions.",
+                        explanation: {
+                            official: "獨白中指示 'Residents are advised to prepare for adverse driving conditions, especially during the morning commute.'，建議居民為惡劣的駕駛條件做準備。",
+                            vocabulary: "adverse driving conditions (惡劣駕駛條件), morning commute (早晨通勤), uncertain (不確定的), precipitation (降水).",
+                            analysis: "獨白直接給出了對居民的建議，即準備應對惡劣駕駛條件，選項 C 是正確答案。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P4-M09", part: 4, type: "Short Talk",
+                monologueAudioText: "Thank you for calling Prime Bank. Our automated system has detected unusual activity on your account. For your security, we have temporarily suspended online access. To verify your identity and restore access, please press 1 now. If you believe this is an error, or if you have any other inquiries, please stay on the line, and a customer service representative will assist you shortly. Please note, for your protection, we will never ask for your full social security number or credit card details over the phone. Thank you for your patience.",
+                questions: [
+                    {
+                        questionId: "P4-Q25",
+                        questionAudioText: "Why has online access been suspended?",
+                        questionText: "Why has online access been suspended?",
+                        optionsAudioText: [
+                            "Due to a system upgrade.",
+                            "Because of unusual account activity.",
+                            "The customer failed to pay a bill.",
+                            "The customer requested it."
+                        ],
+                        correctAnswerText: "Because of unusual account activity.",
+                        explanation: {
+                            official: "獨白中明確說明 'Our automated system has detected unusual activity on your account. For your security, we have temporarily suspended online access.'，原因是偵測到異常活動。",
+                            vocabulary: "automated system (自動化系統), detected (偵測到), unusual activity (異常活動), temporarily suspended (暫時中止).",
+                            analysis: "獨白直接指出了暫停線上存取的原因，選項 B 是正確答案。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q26",
+                        questionAudioText: "What should the customer do to restore access?",
+                        questionText: "What should the customer do to restore access?",
+                        optionsAudioText: [
+                            "Visit a branch office.",
+                            "Press 1.",
+                            "Send an email.",
+                            "Wait for a callback."
+                        ],
+                        correctAnswerText: "Press 1.",
+                        explanation: {
+                            official: "獨白中指示 'To verify your identity and restore access, please press 1 now.'，要恢復存取需要按 1。",
+                            vocabulary: "verify identity (驗證身份), restore access (恢復存取), inquiries (查詢), customer service representative (客服代表).",
+                            analysis: "獨白清楚說明了恢復存取的具體步驟，選項 B 是正確答案。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q27",
+                        questionAudioText: "What information will the bank NOT ask for over the phone?",
+                        questionText: "What information will the bank NOT ask for over the phone?",
+                        optionsAudioText: [
+                            "Account number.",
+                            "Full social security number.",
+                            "Date of birth.",
+                            "Mother's maiden name."
+                        ],
+                        correctAnswerText: "Full social security number.",
+                        explanation: {
+                            official: "獨白中明確警告 'Please note, for your protection, we will never ask for your full social security number or credit card details over the phone.'，不會詢問社會安全號碼或信用卡詳細資料。",
+                            vocabulary: "for your protection (為了您的保護), social security number (社會安全號碼), credit card details (信用卡詳細資料).",
+                            analysis: "獨白明確列出了銀行不會在電話中詢問的敏感資訊，選項 B 是正確答案。"
+                        }
+                    }
+                ]
+            },
+            {
+                id: "P4-M10", part: 4, type: "Short Talk",
+                monologueAudioText: "Good afternoon, class. Today, we're delving into the fascinating field of quantum computing. Unlike classical computers that rely on bits, quantum computers utilize qubits, which can exist in multiple states simultaneously, allowing for exponentially greater processing power. This paradigm shift has profound implications for cryptography, drug discovery, and artificial intelligence. While still in its nascent stages, the potential of quantum computing is immense. Remember, your final project is due next Friday, and I encourage you to explore how these emerging technologies might impact your chosen area of study. Feel free to schedule office hours if you have questions.",
+                questions: [
+                    {
+                        questionId: "P4-Q28",
+                        questionAudioText: "What is the main topic of the lecture?",
+                        questionText: "What is the main topic of the lecture?",
+                        optionsAudioText: [
+                            "The history of classical computers.",
+                            "The ethics of artificial intelligence.",
+                            "The principles of quantum computing.",
+                            "The future of cryptocurrency."
+                        ],
+                        correctAnswerText: "The principles of quantum computing.",
+                        explanation: {
+                            official: "獨白開頭即說明 'Today, we're delving into the fascinating field of quantum computing.'，因此講座的主要主題是量子計算。",
+                            vocabulary: "delving into (深入探討), quantum computing (量子計算), classical computers (傳統電腦), bits (位元), qubits (量子位元).",
+                            analysis: "獨白的核心內容是介紹量子計算的基本原理及其與傳統計算機的區別，選項 C 是正確答案。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q29",
+                        questionAudioText: "What is a key difference between classical computers and quantum computers?",
+                        questionText: "What is a key difference between classical computers and quantum computers?",
+                        optionsAudioText: [
+                            "Classical computers are faster.",
+                            "Quantum computers use bits.",
+                            "Quantum computers utilize qubits.",
+                            "Classical computers can exist in multiple states."
+                        ],
+                        correctAnswerText: "Quantum computers utilize qubits.",
+                        explanation: {
+                            official: "獨白中提到 'Unlike classical computers that rely on bits, quantum computers utilize qubits...'，這是兩者的關鍵區別。",
+                            vocabulary: "simultaneously (同時地), exponentially (指數級地), processing power (處理能力), paradigm shift (範式轉移).",
+                            analysis: "獨白明確對比了兩種電腦使用的基本單位，選項 C 正確。"
+                        }
+                    },
+                    {
+                        questionId: "P4-Q30",
+                        questionAudioText: "When is the final project due?",
+                        questionText: "When is the final project due?",
+                        optionsAudioText: [
+                            "This Friday.",
+                            "Next Monday.",
+                            "Next Friday.",
+                            "At the end of the semester."
+                        ],
+                        correctAnswerText: "Next Friday.",
+                        explanation: {
+                            official: "獨白中提到 'Remember, your final project is due next Friday...'，期末專案的截止日期是下週五。",
+                            vocabulary: "profound implications (深遠的影響), cryptography (密碼學), drug discovery (藥物發現), nascent stages (初期階段), immense (巨大的).",
+                            analysis: "獨白直接說明了期末專案的截止日期，選項 C 是正確答案。"
+                        }
+                    }
+                ]
+            }
+        ];
+
+        // DOM Elements
+        const currentQuestionNumberSpan = document.getElementById('current-question-number');
+        const totalQuestionsSpan = document.getElementById('total-questions');
+        const playMonologueBtn = document.getElementById('play-monologue-btn'); // New button for monologue
+        const playQuestionBtn = document.getElementById('play-question-btn');
+        const playOptionsBtn = document.getElementById('play-options-btn');
+        const monologueTranscriptDisplay = document.getElementById('monologue-transcript-display');
+        const monologueTextContent = document.getElementById('monologue-text-content');
+        const questionTextDisplay = document.getElementById('question-text-display');
+        const questionTextContent = document.getElementById('question-text-content');
+        const optionsContainer = document.getElementById('options-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitAnswerBtn = document.getElementById('submit-answer-btn');
+        const showExplanationBtn = document.getElementById('show-explanation-btn');
+        const explanationDisplay = document.getElementById('explanation-display');
+        const officialExplanation = document.getElementById('official-explanation');
+        const vocabularyExplanation = document.getElementById('vocabulary-explanation');
+        const analysisExplanation = document.getElementById('analysis-explanation');
+        const statusMessage = document.getElementById('status-message');
+        const testArea = document.getElementById('test-area');
+        const completionArea = document.getElementById('completion-area');
+        const restartTestBtn = document.getElementById('restart-test-btn');
+        const nextPartBtn = document.getElementById('next-part-btn');
+
+        // Global state variables (moved to top for scope)
+        // These are already declared at the very top of the script.
+        // let currentQuestionIndex = 0; 
+        // const totalQuestionsCount = allQuestions.reduce((acc, mono) => acc + mono.questions.length, 0);
+        // let userAnswers = new Array(totalQuestionsCount).fill(null); 
+        // let isExplanationMode = false; 
+        // let speechUtterance = null;
+        // let isSpeaking = false;
+        // let currentOptionIndex = 0; 
+
+        // Initialize total questions display
+        totalQuestionsSpan.textContent = totalQuestionsCount; // Now correctly 30
+
+        // --- Helper to toggle button/option disabled state ---
+        function setInteractionState(disabled) {
+            const buttons = [playMonologueBtn, playQuestionBtn, playOptionsBtn, submitAnswerBtn, prevBtn, nextBtn, showExplanationBtn, restartTestBtn, nextPartBtn];
+            buttons.forEach(btn => {
+                if (btn) {
+                    btn.disabled = disabled;
+                    btn.classList.toggle('disabled', disabled);
+                }
+            });
+            
+            optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => {
+                if (disabled) {
+                    optionDiv.classList.add('disabled');
+                    optionDiv.querySelector('input[type="radio"]').disabled = true;
+                } else {
+                    if (submitAnswerBtn.style.display === 'block' && !isExplanationMode) {
+                        optionDiv.classList.remove('disabled');
+                        optionDiv.querySelector('input[type="radio"]').disabled = false;
+                    } else {
+                        optionDiv.classList.add('disabled');
+                        optionDiv.querySelector('input[type="radio"]').disabled = true;
+                    }
+                }
+            });
+        }
+
+        // --- Speech Synthesis (TTS) Functionality ---
+        function speakText(text, onEndCallback = null, buttonType = null) {
+            if (!('speechSynthesis' in window)) {
+                showStatusMessage('您的瀏覽器不支持語音合成功能。', 'error');
+                return;
+            }
+
+            window.speechSynthesis.cancel();
+            setInteractionState(true);
+
+            speechUtterance = new SpeechSynthesisUtterance(text);
+            speechUtterance.lang = 'en-US';
+
+            speechUtterance.onstart = () => {
+                isSpeaking = true;
+                if (buttonType === 'monologue') {
+                    playMonologueBtn.textContent = '停止播放獨白';
+                    playMonologueBtn.classList.add('bg-red-500', 'hover:bg-red-700');
+                    playMonologueBtn.classList.remove('bg-green-500', 'hover:bg-green-700');
+                } else if (buttonType === 'question') {
+                    playQuestionBtn.textContent = '停止播放問題';
+                    playQuestionBtn.classList.add('bg-red-500', 'hover:bg-red-700');
+                    playQuestionBtn.classList.remove('bg-green-500', 'hover:bg-green-700');
+                } else if (buttonType === 'option') {
+                    playOptionsBtn.textContent = `停止播放選項 (${String.fromCharCode(65 + currentOptionIndex)})`;
+                    playOptionsBtn.classList.add('bg-red-500', 'hover:bg-red-700');
+                    playOptionsBtn.classList.remove('bg-green-500', 'hover:bg-green-700');
+                }
+            };
+
+            speechUtterance.onend = () => {
+                isSpeaking = false;
+                // Reset all play buttons
+                playMonologueBtn.textContent = '播放獨白';
+                playMonologueBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                playMonologueBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+
+                playQuestionBtn.textContent = '播放問題';
+                playQuestionBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                playQuestionBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+
+                playOptionsBtn.textContent = '播放選項';
+                playOptionsBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                playOptionsBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+
+                currentOptionIndex = 0; // Reset for next play
+
+                if (onEndCallback) {
+                    onEndCallback();
+                } else {
+                    if (submitAnswerBtn.style.display === 'block') { // If submit button is visible, means not submitted yet
+                        setInteractionState(false); // Re-enable all if not submitted
+                    } else { // If submitted, re-enable only relevant buttons (options remain disabled)
+                        playMonologueBtn.disabled = false; playMonologueBtn.classList.remove('disabled');
+                        playQuestionBtn.disabled = false; playQuestionBtn.classList.remove('disabled');
+                        playOptionsBtn.disabled = false; playOptionsBtn.classList.remove('disabled');
+                        prevBtn.disabled = false; prevBtn.classList.remove('disabled');
+                        nextBtn.disabled = false; nextBtn.classList.remove('disabled');
+                        showExplanationBtn.disabled = false; showExplanationBtn.classList.remove('disabled');
+                        restartTestBtn.disabled = false; restartTestBtn.classList.remove('disabled');
+                        nextPartBtn.disabled = false; nextPartBtn.classList.remove('disabled');
+                    }
+                }
+            };
+
+            speechUtterance.onerror = (event) => {
+                console.error('Speech synthesis error:', event.error);
+                showStatusMessage('語音播放失敗，請檢查瀏覽器設定或網路連線。', 'error');
+                isSpeaking = false;
+                // Reset all play buttons and re-enable interactions on error
+                playMonologueBtn.textContent = '播放獨白';
+                playMonologueBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                playMonologueBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+
+                playQuestionBtn.textContent = '播放問題';
+                playQuestionBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                playQuestionBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+
+                playOptionsBtn.textContent = '播放選項';
+                playOptionsBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                playOptionsBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+                
+                currentOptionIndex = 0;
+                if (submitAnswerBtn.style.display === 'block') {
+                    setInteractionState(false);
+                } else {
+                    setInteractionState(false);
+                    optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
+                    optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.add('disabled'));
+                }
+            };
+
+            window.speechSynthesis.speak(speechUtterance);
+        }
+
+        playMonologueBtn.addEventListener('click', () => {
+            if (isSpeaking) {
+                window.speechSynthesis.cancel();
+            } else {
+                const { monologueGroup } = getQuestionDataByIndex(currentQuestionIndex);
+                if (monologueGroup) {
+                    speakText(monologueGroup.monologueAudioText, null, 'monologue');
+                }
+            }
+        });
+
+        playQuestionBtn.addEventListener('click', () => {
+            if (isSpeaking) {
+                window.speechSynthesis.cancel();
+            } else {
+                const { currentQuestionData } = getQuestionDataByIndex(currentQuestionIndex);
+                if (currentQuestionData) {
+                    speakText(currentQuestionData.questionAudioText, null, 'question');
+                }
+            }
+        });
+
+        playOptionsBtn.addEventListener('click', () => {
+            if (isSpeaking) {
+                window.speechSynthesis.cancel();
+            } else {
+                const { currentQuestionData } = getQuestionDataByIndex(currentQuestionIndex);
+                if (currentQuestionData) {
+                    const options = currentQuestionData.optionsAudioText;
+                    const speakNextOption = () => {
+                        if (currentOptionIndex < options.length) {
+                            const spokenText = `${String.fromCharCode(65 + currentOptionIndex)}. ${options[currentOptionIndex]}`;
+                            speakText(spokenText, () => {
+                                currentOptionIndex++;
+                                speakNextOption();
+                            }, 'option');
+                        } else {
+                            isSpeaking = false;
+                            playOptionsBtn.textContent = '播放選項';
+                            playOptionsBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                            playOptionsBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+                            currentOptionIndex = 0;
+                            if (submitAnswerBtn.style.display === 'block') {
+                                setInteractionState(false);
+                            } else {
+                                setInteractionState(false);
+                                optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
+                                optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.add('disabled'));
+                            }
+                        }
+                    };
+                    currentOptionIndex = 0;
+                    speakNextOption();
+                }
+            }
+        });
+
+        // Helper to get question data based on linear index
+        function getQuestionDataByIndex(linearIndex) {
+            let absoluteQuestionCount = 0;
+            for (let i = 0; i < allQuestions.length; i++) {
+                const monologueGroup = allQuestions[i];
+                const numQuestionsInGroup = monologueGroup.questions.length;
+
+                if (linearIndex >= absoluteQuestionCount && linearIndex < absoluteQuestionCount + numQuestionsInGroup) {
+                    const questionInGroupIndex = linearIndex - absoluteQuestionCount;
+                    return {
+                        monologueGroup: monologueGroup,
+                        questionInGroupIndex: questionInGroupIndex,
+                        currentQuestionData: monologueGroup.questions[questionInGroupIndex]
+                    };
+                }
+                absoluteQuestionCount += numQuestionsInGroup;
+            }
+            return { monologueGroup: null, questionInGroupIndex: -1, currentQuestionData: null };
+        }
+
+        // --- Core Test Logic ---
+        function loadQuestion() {
+            hideStatusMessage();
+            explanationDisplay.style.display = 'none'; // Hide explanation
+            showExplanationBtn.style.display = 'none'; // Hide explanation button initially
+            submitAnswerBtn.style.display = 'block'; // Show submit button
+            setInteractionState(false); // Enable all interactions for new question
+
+            const { monologueGroup, currentQuestionData } = getQuestionDataByIndex(currentQuestionIndex);
+
+            if (!monologueGroup || !currentQuestionData) {
+                console.error("Question data not found for index:", currentQuestionIndex);
+                return;
+            }
+
+            currentQuestionNumberSpan.textContent = currentQuestionIndex + 1;
+            
+            // Hide monologue transcript during test
+            monologueTranscriptDisplay.style.display = 'none';
+            monologueTextContent.textContent = '';
+
+            // Display question text (always visible for Part 4)
+            questionTextContent.textContent = currentQuestionData.questionText;
+            questionTextDisplay.style.display = 'block';
+
+            optionsContainer.innerHTML = ''; // Clear previous options
+
+            currentQuestionData.optionsAudioText.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.classList.add('question-option');
+                const optionText = `${String.fromCharCode(65 + index)}. ${option}`; // Display full option text
+                optionDiv.innerHTML = `<input type="radio" name="question-${currentQuestionIndex}" id="option-${currentQuestionIndex}-${index}" value="${option}" class="mr-3 cursor-pointer">
+                                       <label for="option-${currentQuestionIndex}-${index}" class="cursor-pointer flex-grow">${optionText}</label>`;
+                optionDiv.addEventListener('click', () => {
+                    document.querySelectorAll(`#options-container .question-option`).forEach(opt => opt.classList.remove('selected'));
+                    optionDiv.classList.add('selected');
+                    optionDiv.querySelector('input[type="radio"]').checked = true;
+                    userAnswers[currentQuestionIndex] = option; // Store the selected answer text
+                });
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            // Restore user's previous selection if any
+            if (userAnswers[currentQuestionIndex] !== null) {
+                const selectedOptionValue = userAnswers[currentQuestionIndex];
+                const radioInput = optionsContainer.querySelector(`input[value="${selectedOptionValue}"]`);
+                if (radioInput) {
+                    radioInput.checked = true;
+                    radioInput.closest('.question-option').classList.add('selected');
+                }
+                // If an answer was previously selected, options should remain disabled
+                optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
+                optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.add('disabled'));
+                submitAnswerBtn.style.display = 'none'; // Hide submit button
+                showExplanationBtn.style.display = 'block'; // Show explanation button
+                nextBtn.style.display = 'block'; // Show next button
+            } else {
+                // If no answer selected, ensure options are enabled for interaction
+                optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = false);
+                optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.remove('disabled'));
+            }
+
+            // Update navigation button visibility
+            prevBtn.style.display = currentQuestionIndex > 0 ? 'block' : 'none';
+            nextBtn.style.display = 'none'; // Next button only appears after submission or explanation
+        }
+
+        function showStatusMessage(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.style.display = 'block';
+        }
+
+        function hideStatusMessage() {
+            statusMessage.style.display = 'none';
+        }
+
+        function submitAnswer() {
+            const { currentQuestionData } = getQuestionDataByIndex(currentQuestionIndex);
+            const selectedRadio = optionsContainer.querySelector(`input[name="question-${currentQuestionIndex}"]:checked`);
+
+            if (!selectedRadio) {
+                showStatusMessage('請選擇一個答案。', 'error');
+                return;
+            }
+
+            const userAnswer = selectedRadio.value;
+            userAnswers[currentQuestionIndex] = userAnswer;
+
+            // Disable options after submission
+            optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
+            optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.add('disabled'));
+
+            // Show correct/incorrect feedback
+            const optionsDivs = optionsContainer.querySelectorAll('.question-option');
+            optionsDivs.forEach(optionDiv => {
+                const optionValue = optionDiv.querySelector('input[type="radio"]').value;
+                if (optionValue === currentQuestionData.correctAnswerText) {
+                    optionDiv.classList.add('correct');
+                } else if (optionValue === userAnswer) {
+                    optionDiv.classList.add('incorrect');
+                }
+            });
+
+            submitAnswerBtn.style.display = 'none';
+            showExplanationBtn.style.display = 'block';
+            nextBtn.style.display = 'block';
+
+            if (userAnswer === currentQuestionData.correctAnswerText) {
+                showStatusMessage('答案正確！', 'success');
+            } else {
+                showStatusMessage('答案錯誤。', 'error');
+            }
+        }
+
+        function showExplanation() {
+            isExplanationMode = true;
+            const { monologueGroup, currentQuestionData } = getQuestionDataByIndex(currentQuestionIndex);
+
+            // Display monologue transcript
+            monologueTextContent.textContent = monologueGroup.monologueAudioText;
+            monologueTranscriptDisplay.style.display = 'block';
+
+            // Display question text (already visible, but ensure it's styled for explanation)
+            questionTextContent.textContent = currentQuestionData.questionText;
+            questionTextDisplay.style.display = 'block';
+
+            // Update options to show full text and correct/incorrect styling
+            optionsContainer.innerHTML = ''; // Clear and re-render with full text
+            currentQuestionData.optionsAudioText.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.classList.add('question-option', 'disabled'); // Keep disabled in explanation mode
+                const optionText = `${String.fromCharCode(65 + index)}. ${option}`;
+                optionDiv.innerHTML = `<input type="radio" name="question-${currentQuestionIndex}" id="option-${currentQuestionIndex}-${index}" value="${option}" class="mr-3 cursor-pointer" disabled>
+                                       <label for="option-${currentQuestionIndex}-${index}" class="cursor-pointer flex-grow">${optionText}</label>`;
+                
+                if (option === currentQuestionData.correctAnswerText) {
+                    optionDiv.classList.add('correct');
+                } else if (option === userAnswers[currentQuestionIndex]) {
+                    optionDiv.classList.add('incorrect');
+                }
+                if (option === userAnswers[currentQuestionIndex]) {
+                    optionDiv.classList.add('selected');
+                    optionDiv.querySelector('input[type="radio"]').checked = true;
+                }
+
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            // Display explanation details
+            officialExplanation.textContent = currentQuestionData.explanation.official;
+            vocabularyExplanation.textContent = currentQuestionData.explanation.vocabulary;
+            analysisExplanation.textContent = currentQuestionData.explanation.analysis;
+            explanationDisplay.style.display = 'block';
+
+            showExplanationBtn.style.display = 'none';
+            nextBtn.style.display = 'block';
+        }
+
+        function goToNextQuestion() {
+            if (currentQuestionIndex < totalQuestionsCount - 1) {
+                currentQuestionIndex++;
+                isExplanationMode = false;
+                loadQuestion();
+            } else {
+                testArea.style.display = 'none';
+                completionArea.style.display = 'block';
+            }
+        }
+
+        function goToPreviousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                isExplanationMode = false;
+                loadQuestion();
+            }
+        }
+
+        function restartTest() {
+            currentQuestionIndex = 0;
+            userAnswers = new Array(totalQuestionsCount).fill(null);
+            isExplanationMode = false;
+            completionArea.style.display = 'none';
+            testArea.style.display = 'block';
+            loadQuestion();
+        }
+
+        // Event Listeners
+        nextBtn.addEventListener('click', goToNextQuestion);
+        prevBtn.addEventListener('click', goToPreviousQuestion);
+        submitAnswerBtn.addEventListener('click', submitAnswer);
+        showExplanationBtn.addEventListener('click', showExplanation);
+        restartTestBtn.addEventListener('click', restartTest);
+        
+        nextPartBtn.addEventListener('click', () => {
+            //alert('即將前往 Part 5 測驗！ (此功能待 Part 5 頁面完成後實作)');
+            window.location.href = "./part5.html"; // Example navigation
+
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', loadQuestion);
+
+        // Cancel speech if user navigates away or closes tab
+        window.addEventListener('beforeunload', () => {
+            if ('speechSynthesis' in window && isSpeaking) {
+                window.speechSynthesis.cancel();
+            }
+        });
+    </script>
+</body>
+</html>

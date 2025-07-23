@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOEIC Part 5 模擬測驗</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #f0f4f8;
+            color: #334155;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            margin-top: 20px; /* Add some margin from the top */
+        }
+        .question-option {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+        }
+        .question-option:hover:not(.disabled) {
+            background-color: #e0f2fe;
+            border-color: #90cdf4;
+        }
+        .question-option.selected {
+            background-color: #bfdbfe;
+            border-color: #60a5fa;
+            font-weight: bold;
+        }
+        .question-option.correct {
+            background-color: #d1fae5;
+            border-color: #34d399;
+            font-weight: bold;
+        }
+        .question-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            font-weight: bold;
+        }
+        .question-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .explanation-section {
+            background-color: #f0f9ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+            margin-left: auto;
+            margin-right: auto;
+            text-align: left;
+        }
+        .explanation-section h3 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        .explanation-section p {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        .button-primary, .button-secondary, .button-next-part {
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+        }
+        .button-primary:hover:not(.disabled) {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .button-secondary {
+            background-color: #6b7280;
+        }
+        .button-secondary:hover:not(.disabled) {
+            background-color: #4b5563;
+        }
+        .button-next-part {
+            background-color: #f97316; /* Orange */
+        }
+        .button-next-part:hover:not(.disabled) {
+            background-color: #ea580c;
+        }
+        .button-primary.disabled, .button-secondary.disabled, .button-next-part.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+        }
+        .question-text-display {
+            background-color: #f3f9f9; /* Slightly different background for question text */
+            border: 1px solid #cce5e5;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-6">TOEIC Part 5 模擬測驗</h1>
+
+        <div id="test-area">
+            <h2 class="text-2xl font-bold text-gray-700 mb-6 text-center">Part 5: Incomplete Sentences (句子填空)</h2>
+
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-lg font-semibold text-gray-700">
+                    問題 <span id="current-question-number">1</span> / <span id="total-questions">30</span>
+                </span>
+                <!-- No audio buttons for Part 5 -->
+            </div>
+
+            <!-- Question Text Display -->
+            <div id="question-text-display" class="question-text-display">
+                <p id="question-text-content" class="text-gray-800"></p>
+            </div>
+
+            <!-- Options -->
+            <div id="options-container" class="mb-8">
+                <!-- Options will be dynamically loaded here -->
+            </div>
+
+            <!-- Navigation and Action Buttons -->
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
+                <button id="prev-btn" class="button-secondary" style="display: none;">上一題</button>
+                <button id="submit-answer-btn" class="button-primary">提交答案</button>
+                <button id="show-explanation-btn" class="button-secondary" style="display: none;">查看詳解</button>
+                <button id="next-btn" class="button-primary" style="display: none;">下一題</button>
+            </div>
+
+            <!-- Explanation Section -->
+            <div id="explanation-display" class="explanation-section">
+                <h3 class="text-xl font-bold mb-3">詳解</h3>
+                <h4 class="text-lg font-semibold text-blue-800 mb-2">官方解析：</h4>
+                <p id="official-explanation" class="text-gray-700 mb-4"></p>
+                <h4 class="text-lg font-semibold text-blue-800 mb-2">詞彙補充：</h4>
+                <p id="vocabulary-explanation" class="text-gray-700 mb-4"></p>
+                <h4 class="text-lg font-semibold text-blue-800 mb-2">選項分析：</h4>
+                <p id="analysis-explanation" class="text-gray-700 mb-4"></p>
+            </div>
+
+            <!-- Status Message -->
+            <div id="status-message" class="status-message" style="display: none;"></div>
+        </div>
+
+        <div id="completion-area" class="text-center mt-10 p-8 bg-blue-50 rounded-lg shadow-inner" style="display: none;">
+            <h2 class="text-3xl font-bold text-blue-800 mb-4">Part 5 測驗完成！</h2>
+            <p class="text-xl text-gray-700 mb-6">您已完成所有 Part 5 題目。</p>
+            <button id="next-part-btn" class="button-next-part text-lg px-6 py-3 mr-4">前往 Part 6</button>
+            <button id="restart-test-btn" class="button-secondary text-lg px-6 py-3">重新開始 Part 5</button>
+        </div>
+    </div>
+
+    <script>
+        // Global state variables (declared once at the very top of the script)
+        let currentQuestionIndex = 0;
+        const totalQuestionsCount = 30; // Explicitly set total questions for Part 5
+        let userAnswers = new Array(totalQuestionsCount).fill(null);
+        let isExplanationMode = false;
+
+        // All TOEIC Part 5 Questions (30 questions)
+        const allQuestions = [
+            {
+                id: "P5-Q01", part: 5, type: "Incomplete Sentence",
+                questionText: "The new marketing strategy aims to ______ customer engagement through social media.",
+                options: [
+                    "increase",
+                    "increases",
+                    "increasing",
+                    "increased"
+                ],
+                correctAnswer: "increase",
+                explanation: {
+                    official: "此題考查動詞原形。'aims to' 後面應接動詞原形，表示目的。",
+                    vocabulary: "marketing strategy (行銷策略), aims to (旨在), customer engagement (客戶參與), social media (社群媒體).",
+                    analysis: "選項 A (increase) 是動詞原形，符合語法。選項 B (increases) 是第三人稱單數動詞；選項 C (increasing) 是現在分詞；選項 D (increased) 是過去式或過去分詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q02", part: 5, type: "Incomplete Sentence",
+                questionText: "Mr. Lee is highly ______ for his innovative solutions in product development.",
+                options: [
+                    "respect",
+                    "respectful",
+                    "respectably",
+                    "respected"
+                ],
+                correctAnswer: "respected",
+                explanation: {
+                    official: "此題考查形容詞或過去分詞作形容詞。句意為李先生因其創新解決方案而備受尊敬。'highly' 是副詞，修飾形容詞或過去分詞。",
+                    vocabulary: "highly (高度地), innovative solutions (創新解決方案), product development (產品開發).",
+                    analysis: "選項 D (respected) 是動詞 respect 的過去分詞，在此作形容詞，表示「受人尊敬的」，符合句意。選項 A (respect) 是動詞原形或名詞；選項 B (respectful) 是形容詞，表示「表示尊敬的」；選項 C (respectably) 是副詞，均不符合句意或語法。"
+                }
+            },
+            {
+                id: "P5-Q03", part: 5, type: "Incomplete Sentence",
+                questionText: "All employees are required to ______ the new safety regulations by next month.",
+                options: [
+                    "comply",
+                    "compliance",
+                    "compliant",
+                    "complies"
+                ],
+                correctAnswer: "comply",
+                explanation: {
+                    official: "此題考查動詞原形。'required to' 後面應接動詞原形，表示被要求做某事。",
+                    vocabulary: "required to (被要求), safety regulations (安全規範), by next month (在下個月前).",
+                    analysis: "選項 A (comply) 是動詞原形，表示「遵守」，符合語法。選項 B (compliance) 是名詞；選項 C (compliant) 是形容詞；選項 D (complies) 是第三人稱單數動詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q04", part: 5, type: "Incomplete Sentence",
+                questionText: "The company's annual report provides a ______ overview of its financial performance.",
+                options: [
+                    "comprehend",
+                    "comprehension",
+                    "comprehensive",
+                    "comprehensively"
+                ],
+                correctAnswer: "comprehensive",
+                explanation: {
+                    official: "此題考查形容詞。修飾名詞 'overview' 需要形容詞。",
+                    vocabulary: "annual report (年度報告), provides (提供), overview (概述), financial performance (財務表現).",
+                    analysis: "選項 C (comprehensive) 是形容詞，表示「全面的」，符合句意。選項 A (comprehend) 是動詞；選項 B (comprehension) 是名詞；選項 D (comprehensively) 是副詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q05", part: 5, type: "Incomplete Sentence",
+                questionText: "Despite the challenging market conditions, sales have remained ______ steady.",
+                options: [
+                    "relative",
+                    "relatively",
+                    "relation",
+                    "relate"
+                ],
+                correctAnswer: "relatively",
+                explanation: {
+                    official: "此題考查副詞。修飾形容詞 'steady' 需要副詞。",
+                    vocabulary: "challenging (有挑戰性的), market conditions (市場狀況), remained (保持), steady (穩定).",
+                    analysis: "選項 B (relatively) 是副詞，表示「相對地」，修飾形容詞 steady，符合語法。選項 A (relative) 是形容詞或名詞；選項 C (relation) 是名詞；選項 D (relate) 是動詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q06", part: 5, type: "Incomplete Sentence",
+                questionText: "The new software is designed to ______ data entry errors.",
+                options: [
+                    "minimize",
+                    "minimizes",
+                    "minimizing",
+                    "minimized"
+                ],
+                correctAnswer: "minimize",
+                explanation: {
+                    official: "此題考查動詞原形。'designed to' 後面應接動詞原形，表示目的。",
+                    vocabulary: "software (軟體), designed to (旨在), data entry errors (數據輸入錯誤).",
+                    analysis: "選項 A (minimize) 是動詞原形，表示「最小化」，符合語法。選項 B (minimizes) 是第三人稱單數動詞；選項 C (minimizing) 是現在分詞；選項 D (minimized) 是過去式或過去分詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q07", part: 5, type: "Incomplete Sentence",
+                questionText: "Customers who wish to return merchandise must do so ______ 30 days of purchase.",
+                options: [
+                    "within",
+                    "into",
+                    "among",
+                    "throughout"
+                ],
+                correctAnswer: "within",
+                explanation: {
+                    official: "此題考查介系詞。表示在某個時間範圍內，應使用 'within'。",
+                    vocabulary: "return (退貨), merchandise (商品), purchase (購買).",
+                    analysis: "選項 A (within) 表示「在...之內」，符合句意。選項 B (into) 表示「進入」；選項 C (among) 表示「在...之中」；選項 D (throughout) 表示「遍及，在...期間」，均不符合句意。"
+                }
+            },
+            {
+                id: "P5-Q08", part: 5, type: "Incomplete Sentence",
+                questionText: "The company offers a ______ range of services to its international clients.",
+                options: [
+                    "broaden",
+                    "broadly",
+                    "broad",
+                    "broadening"
+                ],
+                correctAnswer: "broad",
+                explanation: {
+                    official: "此題考查形容詞。修飾名詞 'range' 需要形容詞。",
+                    vocabulary: "offers (提供), range (範圍), services (服務), international clients (國際客戶).",
+                    analysis: "選項 C (broad) 是形容詞，表示「廣泛的」，符合句意。選項 A (broaden) 是動詞；選項 B (broadly) 是副詞；選項 D (broadening) 是現在分詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q09", part: 5, type: "Incomplete Sentence",
+                questionText: "Please ensure that all documents are submitted ______ the deadline.",
+                options: [
+                    "prior",
+                    "prioritize",
+                    "priority",
+                    "prioritizing"
+                ],
+                correctAnswer: "prior",
+                explanation: {
+                    official: "此題考查介系詞片語。'prior to' 表示「在...之前」。",
+                    vocabulary: "ensure (確保), submitted (提交), deadline (截止日期).",
+                    analysis: "選項 A (prior) 與 to 搭配形成 prior to，表示「在...之前」，符合句意。選項 B (prioritize) 是動詞；選項 C (priority) 是名詞；選項 D (prioritizing) 是現在分詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q10", part: 5, type: "Incomplete Sentence",
+                questionText: "The factory's production output has ______ significantly over the past year.",
+                options: [
+                    "increase",
+                    "increased",
+                    "increasing",
+                    "increases"
+                ],
+                correctAnswer: "increased",
+                explanation: {
+                    official: "此題考查動詞時態。句中有時間狀語 'over the past year'，表示在過去一年中持續的變化，通常用現在完成式或過去完成式。此處動詞為 'has'，故需過去分詞。",
+                    vocabulary: "factory (工廠), production output (生產產量), significantly (顯著地), over the past year (在過去一年中).",
+                    analysis: "選項 B (increased) 是動詞 increase 的過去分詞，與助動詞 has 構成現在完成式，符合語法和句意。選項 A (increase) 是動詞原形；選項 C (increasing) 是現在分詞；選項 D (increases) 是第三人稱單數動詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q11", part: 5, type: "Incomplete Sentence",
+                questionText: "The new policy will ______ affect all departments within the organization.",
+                options: [
+                    "direct",
+                    "directed",
+                    "directly",
+                    "direction"
+                ],
+                correctAnswer: "directly",
+                explanation: {
+                    official: "此題考查副詞。修飾動詞 'affect' 需要副詞。",
+                    vocabulary: "policy (政策), affect (影響), departments (部門), organization (組織).",
+                    analysis: "選項 C (directly) 是副詞，表示「直接地」，修飾動詞 affect，符合語法。選項 A (direct) 是形容詞或動詞；選項 B (directed) 是過去式或過去分詞；選項 D (direction) 是名詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q12", part: 5, type: "Incomplete Sentence",
+                questionText: "Please ______ your travel expenses to the accounting department by Friday.",
+                options: [
+                    "submit",
+                    "submission",
+                    "submitting",
+                    "submitted"
+                ],
+                correctAnswer: "submit",
+                explanation: {
+                    official: "此題考查動詞原形。祈使句通常以動詞原形開頭。",
+                    vocabulary: "travel expenses (差旅費用), accounting department (會計部門), by Friday (在週五前).",
+                    analysis: "選項 A (submit) 是動詞原形，表示「提交」，符合語法。選項 B (submission) 是名詞；選項 C (submitting) 是現在分詞；選項 D (submitted) 是過去式或過去分詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q13", part: 5, type: "Incomplete Sentence",
+                questionText: "The company is looking for candidates with strong leadership skills and a ______ to succeed.",
+                options: [
+                    "drive",
+                    "driving",
+                    "drove",
+                    "driven"
+                ],
+                correctAnswer: "drive",
+                explanation: {
+                    official: "此題考查名詞。表示「成功的動力」，應使用名詞 'drive'。",
+                    vocabulary: "candidates (候選人), leadership skills (領導能力), succeed (成功).",
+                    analysis: "選項 A (drive) 在此作名詞，表示「動力，幹勁」，符合句意。選項 B (driving) 是現在分詞或動名詞；選項 C (drove) 是動詞過去式；選項 D (driven) 是過去分詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q14", part: 5, type: "Incomplete Sentence",
+                questionText: "The new security measures are designed to ______ unauthorized access to company data.",
+                options: [
+                    "prevent",
+                    "prevents",
+                    "preventing",
+                    "prevented"
+                ],
+                correctAnswer: "prevent",
+                explanation: {
+                    official: "此題考查動詞原形。'designed to' 後面應接動詞原形，表示目的。",
+                    vocabulary: "security measures (安全措施), unauthorized access (未經授權的存取), company data (公司資料).",
+                    analysis: "選項 A (prevent) 是動詞原形，表示「防止」，符合語法。選項 B (prevents) 是第三人稱單數動詞；選項 C (preventing) 是現在分詞；選項 D (prevented) 是過去式或過去分詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q15", part: 5, type: "Incomplete Sentence",
+                questionText: "The workshop will provide participants with practical ______ on how to improve their presentation skills.",
+                options: [
+                    "advise",
+                    "advisable",
+                    "advice",
+                    "advising"
+                ],
+                correctAnswer: "advice",
+                explanation: {
+                    official: "此題考查名詞。'practical' 後面應接名詞。'advice' 是不可數名詞，表示「建議」。",
+                    vocabulary: "workshop (研討會), participants (參與者), practical (實用的), presentation skills (簡報技巧).",
+                    analysis: "選項 C (advice) 是名詞，表示「建議」，符合句意。選項 A (advise) 是動詞；選項 B (advisable) 是形容詞；選項 D (advising) 是現在分詞或動名詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q16", part: 5, type: "Incomplete Sentence",
+                questionText: "The new policy is expected to ______ the company's overall productivity.",
+                options: [
+                    "enhance",
+                    "enhances",
+                    "enhancing",
+                    "enhanced"
+                ],
+                correctAnswer: "enhance",
+                explanation: {
+                    official: "此題考查動詞原形。'expected to' 後面應接動詞原形，表示預期做某事。",
+                    vocabulary: "policy (政策), expected to (預期), overall productivity (整體生產力).",
+                    analysis: "選項 A (enhance) 是動詞原形，表示「提升」，符合語法。選項 B (enhances) 是第三人稱單數動詞；選項 C (enhancing) 是現在分詞；選項 D (enhanced) 是過去式或過去分詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q17", part: 5, type: "Incomplete Sentence",
+                questionText: "Due to the heavy rain, the outdoor event has been ______ until next weekend.",
+                options: [
+                    "postpone",
+                    "postponing",
+                    "postponed",
+                    "postpones"
+                ],
+                correctAnswer: "postponed",
+                explanation: {
+                    official: "此題考查被動語態。活動是被延期，故需使用過去分詞構成被動語態。",
+                    vocabulary: "heavy rain (大雨), outdoor event (戶外活動), until next weekend (直到下週末).",
+                    analysis: "選項 C (postponed) 是動詞 postpone 的過去分詞，與 'has been' 構成現在完成被動語態，表示「已被延期」，符合句意和語法。選項 A (postpone) 是動詞原形；選項 B (postponing) 是現在分詞；選項 D (postpones) 是第三人稱單數動詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q18", part: 5, type: "Incomplete Sentence",
+                questionText: "The manager requested a ______ of the project budget before approving the proposal.",
+                options: [
+                    "revise",
+                    "revising",
+                    "revision",
+                    "revised"
+                ],
+                correctAnswer: "revision",
+                explanation: {
+                    official: "此題考查名詞。'a ______ of' 表示「...的修改」，需要名詞。",
+                    vocabulary: "manager (經理), requested (要求), project budget (專案預算), approving (批准), proposal (提案).",
+                    analysis: "選項 C (revision) 是名詞，表示「修訂，修改」，符合句意。選項 A (revise) 是動詞；選項 B (revising) 是現在分詞或動名詞；選項 D (revised) 是過去式或過去分詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q19", part: 5, type: "Incomplete Sentence",
+                questionText: "Applicants must submit their resumes and cover letters by the ______ deadline.",
+                options: [
+                    "establish",
+                    "establishing",
+                    "established",
+                    "establishes"
+                ],
+                correctAnswer: "established",
+                explanation: {
+                    official: "此題考查過去分詞作形容詞。修飾名詞 'deadline'，表示「既定的，已確定的」截止日期。",
+                    vocabulary: "applicants (申請人), submit (提交), resumes (履歷), cover letters (求職信), deadline (截止日期).",
+                    analysis: "選項 C (established) 是動詞 establish 的過去分詞，在此作形容詞，表示「既定的，已確定的」，符合句意。選項 A (establish) 是動詞原形；選項 B (establishing) 是現在分詞；選項 D (establishes) 是第三人稱單數動詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q20", part: 5, type: "Incomplete Sentence",
+                questionText: "The new employee quickly ______ to the company's work environment.",
+                options: [
+                    "adapt",
+                    "adapting",
+                    "adapted",
+                    "adapts"
+                ],
+                correctAnswer: "adapted",
+                explanation: {
+                    official: "此題考查動詞時態。句中有時間副詞 'quickly'，且描述過去發生的動作，故需使用過去式。",
+                    vocabulary: "employee (員工), quickly (快速地), work environment (工作環境).",
+                    analysis: "選項 C (adapted) 是動詞 adapt 的過去式，表示「適應」，符合句意。選項 A (adapt) 是動詞原形；選項 B (adapting) 是現在分詞；選項 D (adapts) 是第三人稱單數動詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q21", part: 5, type: "Incomplete Sentence",
+                questionText: "The company's success is largely ______ to its dedicated team and innovative products.",
+                options: [
+                    "attribute",
+                    "attributing",
+                    "attributable",
+                    "attributed"
+                ],
+                correctAnswer: "attributable",
+                explanation: {
+                    official: "此題考查形容詞。句意為「公司的成功主要歸因於...」，需要形容詞來修飾主語 'success'。",
+                    vocabulary: "success (成功), largely (主要地), dedicated team (敬業的團隊), innovative products (創新產品).",
+                    analysis: "選項 C (attributable) 是形容詞，表示「可歸因於...的」，符合句意。選項 A (attribute) 是動詞或名詞；選項 B (attributing) 是現在分詞或動名詞；選項 D (attributed) 是過去分詞，通常與 be 動詞構成被動語態，但此處直接修飾主語，故形容詞更為恰當。"
+                }
+            },
+            {
+                id: "P5-Q22", part: 5, type: "Incomplete Sentence",
+                questionText: "Please remember to ______ your computer before leaving the office.",
+                options: [
+                    "shut down",
+                    "shutting down",
+                    "shutted down",
+                    "shuts down"
+                ],
+                correctAnswer: "shut down",
+                explanation: {
+                    official: "此題考查動詞原形。祈使句通常以動詞原形開頭。",
+                    vocabulary: "remember to (記得), leaving the office (離開辦公室).",
+                    analysis: "選項 A (shut down) 是動詞片語原形，表示「關閉」，符合語法。選項 B (shutting down) 是現在分詞；選項 C (shutted down) 是錯誤形式；選項 D (shuts down) 是第三人稱單數動詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q23", part: 5, type: "Incomplete Sentence",
+                questionText: "The annual conference provides an excellent ______ for networking with industry leaders.",
+                options: [
+                    "opportunity",
+                    "opportunities",
+                    "opportune",
+                    "opportunely"
+                ],
+                correctAnswer: "opportunity",
+                explanation: {
+                    official: "此題考查名詞。'an excellent' 後面應接單數可數名詞。",
+                    vocabulary: "annual conference (年度會議), provides (提供), excellent (極好的), networking (建立人脈), industry leaders (行業領導者).",
+                    analysis: "選項 A (opportunity) 是單數可數名詞，表示「機會」，符合句意。選項 B (opportunities) 是複數名詞；選項 C (opportune) 是形容詞；選項 D (opportunely) 是副詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q24", part: 5, type: "Incomplete Sentence",
+                questionText: "The new regulations will be implemented ______ the beginning of next quarter.",
+                options: [
+                    "from",
+                    "at",
+                    "on",
+                    "by"
+                ],
+                correctAnswer: "at",
+                explanation: {
+                    official: "此題考查介系詞。表示在某個時間點，通常用 'at'。",
+                    vocabulary: "regulations (規範), implemented (實施), beginning (開始), next quarter (下個季度).",
+                    analysis: "選項 B (at) 表示「在...（時間點）」，符合句意。選項 A (from) 表示「從」；選項 C (on) 通常用於特定日期；選項 D (by) 表示「在...之前」，均不符合此處語意。"
+                }
+            },
+            {
+                id: "P5-Q25", part: 5, type: "Incomplete Sentence",
+                questionText: "Ms. Chen is currently ______ a training program for new employees.",
+                options: [
+                    "develop",
+                    "development",
+                    "developing",
+                    "developed"
+                ],
+                correctAnswer: "developing",
+                explanation: {
+                    official: "此題考查動詞時態。'is currently' 表示現在進行式，故需使用現在分詞。",
+                    vocabulary: "currently (目前), training program (培訓計畫), new employees (新員工).",
+                    analysis: "選項 C (developing) 是動詞 develop 的現在分詞，與 'is currently' 構成現在進行式，表示「正在開發」，符合語法。選項 A (develop) 是動詞原形；選項 B (development) 是名詞；選項 D (developed) 是過去式或過去分詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q26", part: 5, type: "Incomplete Sentence",
+                questionText: "The company's decision to expand into new markets was a ______ one.",
+                options: [
+                    "strategic",
+                    "strategy",
+                    "strategically",
+                    "strategize"
+                ],
+                correctAnswer: "strategic",
+                explanation: {
+                    official: "此題考查形容詞。修飾名詞 'one' (代指 decision) 需要形容詞。",
+                    vocabulary: "decision (決定), expand into (擴展到), new markets (新市場).",
+                    analysis: "選項 A (strategic) 是形容詞，表示「策略性的」，符合句意。選項 B (strategy) 是名詞；選項 C (strategically) 是副詞；選項 D (strategize) 是動詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q27", part: 5, type: "Incomplete Sentence",
+                questionText: "The new system will allow us to ______ our resources more efficiently.",
+                options: [
+                    "allocate",
+                    "allocation",
+                    "allocating",
+                    "allocated"
+                ],
+                correctAnswer: "allocate",
+                explanation: {
+                    official: "此題考查動詞原形。'allow us to' 後面應接動詞原形，表示允許做某事。",
+                    vocabulary: "system (系統), allow us to (允許我們), resources (資源), efficiently (高效地).",
+                    analysis: "選項 A (allocate) 是動詞原形，表示「分配」，符合語法。選項 B (allocation) 是名詞；選項 C (allocating) 是現在分詞；選項 D (allocated) 是過去式或過去分詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q28", part: 5, type: "Incomplete Sentence",
+                questionText: "The customer service representative was very ______ in resolving my issue.",
+                options: [
+                    "help",
+                    "helpful",
+                    "helpfully",
+                    "helping"
+                ],
+                correctAnswer: "helpful",
+                explanation: {
+                    official: "此題考查形容詞。修飾名詞 'representative'，表示「有幫助的」。",
+                    vocabulary: "customer service representative (客服代表), resolving (解決), issue (問題).",
+                    analysis: "選項 B (helpful) 是形容詞，表示「有幫助的」，符合句意。選項 A (help) 是動詞或名詞；選項 C (helpfully) 是副詞；選項 D (helping) 是現在分詞或動名詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q29", part: 5, type: "Incomplete Sentence",
+                questionText: "The company plans to ______ its operations to meet the increasing demand.",
+                options: [
+                    "expand",
+                    "expansion",
+                    "expansive",
+                    "expands"
+                ],
+                correctAnswer: "expand",
+                explanation: {
+                    official: "此題考查動詞原形。'plans to' 後面應接動詞原形，表示計劃做某事。",
+                    vocabulary: "plans to (計劃), operations (業務，營運), increasing demand (不斷增長的需求).",
+                    analysis: "選項 A (expand) 是動詞原形，表示「擴展」，符合語法。選項 B (expansion) 是名詞；選項 C (expansive) 是形容詞；選項 D (expands) 是第三人稱單數動詞，均不符合此處語法結構。"
+                }
+            },
+            {
+                id: "P5-Q30", part: 5, type: "Incomplete Sentence",
+                questionText: "The new training program is designed to ______ employees with the necessary skills.",
+                options: [
+                    "equip",
+                    "equips",
+                    "equipping",
+                    "equipped"
+                ],
+                correctAnswer: "equip",
+                explanation: {
+                    official: "此題考查動詞原形。'designed to' 後面應接動詞原形，表示目的。",
+                    vocabulary: "training program (培訓計畫), employees (員工), necessary skills (必要技能).",
+                    analysis: "選項 A (equip) 是動詞原形，表示「裝備，配備」，符合語法。選項 B (equips) 是第三人稱單數動詞；選項 C (equipping) 是現在分詞；選項 D (equipped) 是過去式或過去分詞，均不符合此處語法結構。"
+                }
+            }
+        ];
+
+        // DOM Elements
+        const currentQuestionNumberSpan = document.getElementById('current-question-number');
+        const totalQuestionsSpan = document.getElementById('total-questions');
+        // No audio buttons for Part 5
+        const questionTextDisplay = document.getElementById('question-text-display');
+        const questionTextContent = document.getElementById('question-text-content');
+        const optionsContainer = document.getElementById('options-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitAnswerBtn = document.getElementById('submit-answer-btn');
+        const showExplanationBtn = document.getElementById('show-explanation-btn');
+        const explanationDisplay = document.getElementById('explanation-display');
+        const officialExplanation = document.getElementById('official-explanation');
+        const vocabularyExplanation = document.getElementById('vocabulary-explanation');
+        const analysisExplanation = document.getElementById('analysis-explanation');
+        const statusMessage = document.getElementById('status-message');
+        const testArea = document.getElementById('test-area');
+        const completionArea = document.getElementById('completion-area');
+        const restartTestBtn = document.getElementById('restart-test-btn');
+        const nextPartBtn = document.getElementById('next-part-btn');
+
+        // Initialize total questions display
+        totalQuestionsSpan.textContent = totalQuestionsCount;
+
+        // --- Helper to toggle button/option disabled state ---
+        function setInteractionState(disabled) {
+            // Only buttons relevant to Part 5
+            const buttons = [submitAnswerBtn, prevBtn, nextBtn, showExplanationBtn, restartTestBtn, nextPartBtn];
+            buttons.forEach(btn => {
+                if (btn) {
+                    btn.disabled = disabled;
+                    btn.classList.toggle('disabled', disabled);
+                }
+            });
+            
+            optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => {
+                if (disabled) {
+                    optionDiv.classList.add('disabled');
+                    optionDiv.querySelector('input[type="radio"]').disabled = true;
+                } else {
+                    if (submitAnswerBtn.style.display === 'block' && !isExplanationMode) {
+                        optionDiv.classList.remove('disabled');
+                        optionDiv.querySelector('input[type="radio"]').disabled = false;
+                    } else {
+                        optionDiv.classList.add('disabled');
+                        optionDiv.querySelector('input[type="radio"]').disabled = true;
+                    }
+                }
+            });
+        }
+
+        // --- Core Test Logic ---
+        function loadQuestion() {
+            hideStatusMessage();
+            explanationDisplay.style.display = 'none'; // Hide explanation
+            showExplanationBtn.style.display = 'none'; // Hide explanation button initially
+            submitAnswerBtn.style.display = 'block'; // Show submit button
+            setInteractionState(false); // Enable all interactions for new question
+
+            const currentQuestionData = allQuestions[currentQuestionIndex];
+
+            currentQuestionNumberSpan.textContent = currentQuestionIndex + 1;
+            
+            // Display question text for Part 5
+            questionTextContent.textContent = currentQuestionData.questionText;
+            questionTextDisplay.style.display = 'block';
+
+            optionsContainer.innerHTML = ''; // Clear previous options
+
+            currentQuestionData.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.classList.add('question-option');
+                const optionText = `${String.fromCharCode(65 + index)}. ${option}`; // Display full option text
+                optionDiv.innerHTML = `<input type="radio" name="question-${currentQuestionIndex}" id="option-${currentQuestionIndex}-${index}" value="${option}" class="mr-3 cursor-pointer">
+                                       <label for="option-${currentQuestionIndex}-${index}" class="cursor-pointer flex-grow">${optionText}</label>`;
+                optionDiv.addEventListener('click', () => {
+                    document.querySelectorAll(`#options-container .question-option`).forEach(opt => opt.classList.remove('selected'));
+                    optionDiv.classList.add('selected');
+                    optionDiv.querySelector('input[type="radio"]').checked = true;
+                    userAnswers[currentQuestionIndex] = option; // Store the selected answer text
+                });
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            // Restore user's previous selection if any
+            if (userAnswers[currentQuestionIndex] !== null) {
+                const selectedOptionValue = userAnswers[currentQuestionIndex];
+                const radioInput = optionsContainer.querySelector(`input[value="${selectedOptionValue}"]`);
+                if (radioInput) {
+                    radioInput.checked = true;
+                    radioInput.closest('.question-option').classList.add('selected');
+                }
+                // If an answer was previously selected, options should remain disabled
+                optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
+                optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.add('disabled'));
+                submitAnswerBtn.style.display = 'none'; // Hide submit button
+                showExplanationBtn.style.display = 'block'; // Show explanation button
+                nextBtn.style.display = 'block'; // Show next button
+            } else {
+                // If no answer selected, ensure options are enabled for interaction
+                optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = false);
+                optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.remove('disabled'));
+            }
+
+            // Update navigation button visibility
+            prevBtn.style.display = currentQuestionIndex > 0 ? 'block' : 'none';
+            nextBtn.style.display = 'none'; // Next button only appears after submission or explanation
+        }
+
+        function showStatusMessage(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.style.display = 'block';
+        }
+
+        function hideStatusMessage() {
+            statusMessage.style.display = 'none';
+        }
+
+        function submitAnswer() {
+            const currentQuestionData = allQuestions[currentQuestionIndex];
+            const selectedRadio = optionsContainer.querySelector(`input[name="question-${currentQuestionIndex}"]:checked`);
+
+            if (!selectedRadio) {
+                showStatusMessage('請選擇一個答案。', 'error');
+                return;
+            }
+
+            const userAnswer = selectedRadio.value;
+            userAnswers[currentQuestionIndex] = userAnswer;
+
+            // Disable options after submission
+            optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
+            optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.add('disabled'));
+
+            // Show correct/incorrect feedback
+            const optionsDivs = optionsContainer.querySelectorAll('.question-option');
+            optionsDivs.forEach(optionDiv => {
+                const optionValue = optionDiv.querySelector('input[type="radio"]').value;
+                if (optionValue === currentQuestionData.correctAnswer) {
+                    optionDiv.classList.add('correct');
+                } else if (optionValue === userAnswer) {
+                    optionDiv.classList.add('incorrect');
+                }
+            });
+
+            submitAnswerBtn.style.display = 'none';
+            showExplanationBtn.style.display = 'block';
+            nextBtn.style.display = 'block';
+
+            if (userAnswer === currentQuestionData.correctAnswer) {
+                showStatusMessage('答案正確！', 'success');
+            } else {
+                showStatusMessage('答案錯誤。', 'error');
+            }
+        }
+
+        function showExplanation() {
+            isExplanationMode = true;
+            const currentQuestionData = allQuestions[currentQuestionIndex];
+
+            // Display question text (always visible for Part 5)
+            questionTextContent.textContent = currentQuestionData.questionText;
+            questionTextDisplay.style.display = 'block';
+
+            // Update options to show full text and correct/incorrect styling
+            optionsContainer.innerHTML = ''; // Clear and re-render with full text
+            currentQuestionData.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.classList.add('question-option', 'disabled'); // Keep disabled in explanation mode
+                const optionText = `${String.fromCharCode(65 + index)}. ${option}`;
+                optionDiv.innerHTML = `<input type="radio" name="question-${currentQuestionIndex}" id="option-${currentQuestionIndex}-${index}" value="${option}" class="mr-3 cursor-pointer" disabled>
+                                       <label for="option-${currentQuestionIndex}-${index}" class="cursor-pointer flex-grow">${optionText}</label>`;
+                
+                if (option === currentQuestionData.correctAnswer) {
+                    optionDiv.classList.add('correct');
+                } else if (option === userAnswers[currentQuestionIndex]) {
+                    optionDiv.classList.add('incorrect');
+                }
+                if (option === userAnswers[currentQuestionIndex]) {
+                    optionDiv.classList.add('selected');
+                    optionDiv.querySelector('input[type="radio"]').checked = true;
+                }
+
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            // Display explanation details
+            officialExplanation.textContent = currentQuestionData.explanation.official;
+            vocabularyExplanation.textContent = currentQuestionData.explanation.vocabulary;
+            analysisExplanation.textContent = currentQuestionData.explanation.analysis;
+            explanationDisplay.style.display = 'block';
+
+            showExplanationBtn.style.display = 'none';
+            nextBtn.style.display = 'block';
+        }
+
+        function goToNextQuestion() {
+            if (currentQuestionIndex < totalQuestionsCount - 1) {
+                currentQuestionIndex++;
+                isExplanationMode = false;
+                loadQuestion();
+            } else {
+                testArea.style.display = 'none';
+                completionArea.style.display = 'block';
+            }
+        }
+
+        function goToPreviousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                isExplanationMode = false;
+                loadQuestion();
+            }
+        }
+
+        function restartTest() {
+            currentQuestionIndex = 0;
+            userAnswers = new Array(totalQuestionsCount).fill(null);
+            isExplanationMode = false;
+            completionArea.style.display = 'none';
+            testArea.style.display = 'block';
+            loadQuestion();
+        }
+
+        // Event Listeners
+        nextBtn.addEventListener('click', goToNextQuestion);
+        prevBtn.addEventListener('click', goToPreviousQuestion);
+        submitAnswerBtn.addEventListener('click', submitAnswer);
+        showExplanationBtn.addEventListener('click', showExplanation);
+        restartTestBtn.addEventListener('click', restartTest);
+        
+        nextPartBtn.addEventListener('click', () => {
+            //alert('即將前往 Part 6 測驗！ (此功能待 Part 6 頁面完成後實作)');
+            window.location.href = "./part6.html"; // Example navigation
+
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', loadQuestion);
+    </script>
+</body>
+</html>

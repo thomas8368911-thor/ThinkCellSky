@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多益線上模擬測驗 - Part 6</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .passage-content {
+            white-space: pre-wrap;
+            line-height: 2;
+        }
+        .question-container {
+            border-left: 3px solid transparent;
+        }
+        .question-container.active {
+            border-left: 3px solid #3b82f6; /* blue-500 */
+        }
+        .option-label {
+            transition: all 0.2s ease-in-out;
+        }
+        .option-label:hover {
+            background-color: #eff6ff; /* blue-50 */
+        }
+        input[type="radio"]:checked + .option-label {
+            background-color: #dbeafe; /* blue-200 */
+            border-color: #3b82f6; /* blue-500 */
+        }
+        .analysis-section {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="test-container" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Header -->
+        <header class="bg-white shadow-md rounded-lg p-6 mb-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-blue-600">TOEIC Part 6: Text Completion</h1>
+                <p class="text-gray-600 mt-1">段落填空 - 4 篇文章，16 道題目</p>
+            </div>
+            <div id="timer" class="text-xl font-semibold bg-gray-200 text-gray-700 px-4 py-2 rounded-md">10:00</div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main-content" class="bg-white shadow-md rounded-lg p-6">
+            <div id="passage-container">
+                <h2 id="passage-title" class="text-xl font-bold mb-4 text-gray-700"></h2>
+                <div id="passage-content" class="passage-content text-base border-l-4 border-gray-200 pl-4"></div>
+            </div>
+
+            <div id="questions-container" class="mt-8 space-y-6">
+                <!-- Questions will be dynamically inserted here -->
+            </div>
+
+            <div class="mt-8 pt-6 border-t flex justify-between items-center">
+                <button id="prev-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300 disabled:opacity-50" disabled>上一題組</button>
+                <div id="progress-indicator" class="text-sm text-gray-600"></div>
+                <button id="next-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">下一題組</button>
+                <button id="submit-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 hidden">提交答案</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="results-container" class="hidden max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 mt-8 text-center">
+        <h2 class="text-3xl font-bold text-gray-800 mb-4">測驗完成！</h2>
+        <p class="text-xl text-gray-600 mb-6">您的成績：<span id="score" class="font-bold text-blue-600"></span></p>
+        <div id="summary-grid" class="grid grid-cols-4 sm:grid-cols-8 gap-2 mb-8"></div>
+        <div class="flex justify-center space-x-4">
+            <button id="review-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300">查看詳解</button>
+            <button id="next-part-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300">前往 Part 7</button>
+        </div>
+     
+    </div>
+     
+    <!-- Analysis Section -->
+    <div id="analysis-container" class="hidden max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 mt-8">
+        <!-- Analysis content will be dynamically inserted here -->
+    </div>
+
+<script>
+const allQuestions = [
+    // Passage 1: Questions 131-134
+    {
+        part: 6,
+        passageTitle: "Memo: Corporate Sustainability Initiative",
+        passage: `To: All Staff
+From: Management
+Date: July 22, 2025
+Subject: New Corporate Sustainability Initiative
+
+Dear Colleagues,
+
+As part of our ongoing commitment to environmental responsibility, we are excited to announce a new, comprehensive recycling program that ---131.--- across all departments, effective August 1st. This initiative is a significant step towards reducing our corporate carbon footprint.
+
+Key ---132.--- of this program include new sorting bins for paper, plastics, and glass, which will be placed in all break rooms and common areas. We will also be transitioning to using only recycled paper for all internal documents. ---133.---. We believe these changes, though minor, will collectively make a substantial impact. We appreciate your full cooperation in making this program a success. Your participation is ---134.--- for us to achieve our sustainability goals.
+
+Further details and guidelines will be distributed next week. Thank you for your commitment to a greener workplace.
+
+Sincerely,
+The Management Team`,
+        questions: [
+            {
+                number: 131,
+                question: "",
+                options: { A: "is implemented", B: "will be implemented", C: "has implemented", D: "was implementing" },
+                answer: "B",
+                analysis: {
+                    translation: "作為我們對環境責任持續承諾的一部分，我們很高興地宣布一項新的、全面的回收計畫，該計畫將於 8 月 1 日起在所有部門實施。",
+                    vocab: {
+                        "initiative (n.)": "倡議；新措施",
+                        "comprehensive (adj.)": "全面的",
+                        "implement (v.)": "實施，執行",
+                        "effective (adj.)": "生效的"
+                    },
+                    explanation: "題目考的是動詞時態。根據句中的時間副詞 'effective August 1st' (自8月1日起生效)，可知這項計畫是在未來才會實施，因此應使用未來式。選項 (B) 'will be implemented' (將被實施) 是未來被動式，符合句意和文法，故為正解。"
+                }
+            },
+            {
+                number: 132,
+                question: "",
+                options: { A: "components", B: "dividends", C: "obstacles", D: "perspectives" },
+                answer: "A",
+                analysis: {
+                    translation: "該計畫的主要組成部分包括用於紙張、塑膠和玻璃的新分類箱...",
+                    vocab: {
+                        "component (n.)": "組成部分；零件",
+                        "dividend (n.)": "股息；紅利",
+                        "obstacle (n.)": "障礙",
+                        "perspective (n.)": "觀點；角度"
+                    },
+                    explanation: "題目考的是詞彙。空格後方列舉了新計畫的具體內容（如分類箱、再生紙等），這些都是構成計畫的「要素」或「組成部分」。選項 (A) 'components' 最符合語意。其他選項 (B) 股息、(C) 障礙、(D) 觀點皆不合適。"
+                }
+            },
+            {
+                number: 133,
+                question: "Choose the best sentence to fill in the blank.",
+                options: {
+                    A: "The previous system was highly efficient.",
+                    B: "Therefore, profits are expected to increase.",
+                    C: "All employees must attend a mandatory training session.",
+                    D: "We trust that these changes will be straightforward to adopt."
+                },
+                answer: "D",
+                isSentence: true,
+                analysis: {
+                    translation: "我們也將轉為所有內部文件僅使用再生紙。我們相信這些改變雖然微小，但將共同產生重大影響。",
+                    vocab: {
+                        "straightforward (adj.)": "簡單明瞭的",
+                        "adopt (v.)": "採納；採用",
+                        "mandatory (adj.)": "強制的；義務的"
+                    },
+                    explanation: "題目考的是句子插入，需要理解上下文的邏輯。空格前一句提到公司將採取的新措施（使用再生紙），後一句則說「相信這些改變...將產生重大影響」。插入的句子應該是承上啟下的。選項 (D) 「我們相信這些改變將會很容易適應」語氣正面，且能順暢地連接前後文，表達公司對新政能順利推行的信心。選項 (A) 與主題（新計畫）矛盾。選項 (B) 提到利潤，與環保主題關聯不大。選項 (C) 提到強制培訓，語氣較為強硬，與文章整體的鼓勵合作風格不符。"
+                }
+            },
+            {
+                number: 134,
+                question: "",
+                options: { A: "optional", B: "crucial", C: "minimal", D: "temporary" },
+                answer: "B",
+                analysis: {
+                    translation: "您的參與對於我們實現可持續發展目標至關重要。",
+                    vocab: {
+                        "crucial (adj.)": "至關重要的",
+                        "sustainability (n.)": "可持續性",
+                        "optional (adj.)": "可選的",
+                        "minimal (adj.)": "最小的"
+                    },
+                    explanation: "題目考的是詞彙。根據上下文，公司強調需要員工的「全力合作」(full cooperation) 才能讓計畫成功，因此員工的參與是「至關重要的」。選項 (B) 'crucial' 最符合語意。其他選項 (A) 可選的、(C) 最小的、(D) 暫時的，皆不符合文意。"
+                }
+            }
+        ]
+    },
+    // Passage 2: Questions 135-138
+    {
+        part: 6,
+        passageTitle: "Email Exchange: Customer Service Inquiry",
+        passage: `To: support@techgadget.com
+From: emily.chen@email.com
+Subject: Inquiry Regarding Order #TG-8812
+
+Dear TechGadget Team,
+
+I am writing to report a ---135.--- with my recent order, #TG-8812, which was delivered today. According to my order confirmation, I should have received the "Pro-Audio X1" headphones in black. However, the item I received is the "Sound-Light S2" model in white.
+
+---136.---. Could you please advise on the procedure for an exchange? I would like to receive the correct item as soon as possible. My order number is TG-8812.
+
+Thank you for your prompt attention to this matter.
+
+Sincerely,
+Emily Chen
+
+---
+
+To: emily.chen@email.com
+From: support@techgadget.com
+Subject: Re: Inquiry Regarding Order #TG-8812
+
+Dear Ms. Chen,
+
+Thank you for contacting us. We sincerely apologize for the error in your shipment. We understand your frustration and want to ---137.--- this issue for you immediately.
+
+A pre-paid return shipping label has just been emailed to you. Please affix it to the package and drop it off at any post office. We have already dispatched the correct item, the "Pro-Audio X1" headphones in black, via express shipping. It should ---138.--- you within two business days.
+
+We appreciate your patience and understanding.
+
+Best regards,
+TechGadget Support`,
+        questions: [
+            {
+                number: 135,
+                question: "",
+                options: { A: "discrepancy", B: "compliment", C: "feature", D: "transaction" },
+                answer: "A",
+                analysis: {
+                    translation: "我寫信是為了報告我最近的訂單 #TG-8812 有一個不符之處...",
+                    vocab: {
+                        "discrepancy (n.)": "不符；差異",
+                        "compliment (n.)": "讚美",
+                        "feature (n.)": "特色",
+                        "transaction (n.)": "交易"
+                    },
+                    explanation: "題目考的是詞彙。根據上下文，顧客訂購了A商品卻收到了B商品，這是一種「差異」或「不符」。選項 (A) 'discrepancy' 最能準確描述這種情況。其他選項 (B) 讚美、(C) 特色、(D) 交易，語意皆不通順。"
+                }
+            },
+            {
+                number: 136,
+                question: "Choose the best sentence to fill in the blank.",
+                options: {
+                    A: "The delivery was surprisingly fast.",
+                    B: "I would like to order another one.",
+                    C: "I have attached a photo for your reference.",
+                    D: "The packaging was damaged upon arrival."
+                },
+                answer: "C",
+                isSentence: true,
+                analysis: {
+                    translation: "我收到的商品是白色的「Sound-Light S2」型號。我已附上一張照片供您參考。請問換貨的程序為何？",
+                    vocab: {
+                        "attach (v.)": "附上",
+                        "reference (n.)": "參考",
+                        "procedure (n.)": "程序"
+                    },
+                    explanation: "題目考的是句子插入。前文描述收到了錯誤的商品，後文詢問換貨流程。在這種情況下，提供證據（例如照片）來證明收到的商品有誤，是最合乎邏輯的行為。選項 (C) 「我已附上一張照片供您參考」能強化自己的說法，並讓客服人員更容易處理問題，是最佳選項。選項 (A) 與投訴主旨不符。選項 (B) 邏輯不通。選項 (D) 提到包裝損壞，但內文主要問題是品項錯誤，焦點不同。"
+                }
+            },
+            {
+                number: 137,
+                question: "",
+                options: { A: "aggravate", B: "rectify", C: "ignore", D: "complicate" },
+                answer: "B",
+                analysis: {
+                    translation: "我們理解您的沮喪，並希望立即為您糾正這個問題。",
+                    vocab: {
+                        "rectify (v.)": "糾正；矯正",
+                        "aggravate (v.)": "使惡化",
+                        "ignore (v.)": "忽略",
+                        "complicate (v.)": "使複雜化"
+                    },
+                    explanation: "題目考的是詞彙。客服回信的目的是為了解決顧客的問題。選項 (B) 'rectify' (糾正) 符合客服人員應有的專業態度和行為。其他選項 (A) 使惡化、(C) 忽略、(D) 使複雜化，都與客服的目的背道而馳。"
+                }
+            },
+            {
+                number: 138,
+                question: "",
+                options: { A: "reach", B: "reaches", C: "reached", D: "reaching" },
+                answer: "A",
+                analysis: {
+                    translation: "它應該會在兩個工作天內送達您手中。",
+                    vocab: {
+                        "dispatch (v.)": "派遣；寄出",
+                        "express shipping": "快遞",
+                        "business day": "工作日"
+                    },
+                    explanation: "題目考的是動詞形式。助動詞 'should' 後面必須接原形動詞。因此，選項 (A) 'reach' 是唯一正確的答案。"
+                }
+            }
+        ]
+    },
+    // Passage 3: Questions 139-142
+    {
+        part: 6,
+        passageTitle: "Article: The Future of Urban Agriculture",
+        passage: `As global populations become increasingly concentrated in cities, traditional farming methods face significant challenges. A ---139.--- solution that is gaining traction is vertical farming. This method involves growing crops in vertically stacked layers, often in controlled, indoor environments.
+
+---140.--- can be set up in warehouses, shipping containers, or even skyscrapers, vertical farms use less space and water compared to conventional agriculture. ---141.---. Furthermore, by growing food closer to consumers, transportation costs and carbon emissions are drastically reduced.
+
+While the initial setup costs can be high, many experts believe the long-term benefits, such as stable year-round production and a higher crop ---142.---, outweigh the drawbacks. This technology could play a vital role in ensuring food security for future urban generations.`,
+        questions: [
+            {
+                number: 139,
+                question: "",
+                options: { A: "promising", B: "failing", C: "historic", D: "doubtful" },
+                answer: "A",
+                analysis: {
+                    translation: "一個正在獲得關注、前景看好的解決方案是垂直農業。",
+                    vocab: {
+                        "traction (n.)": "牽引力；在這裡指「受到歡迎/關注」",
+                        "vertical farming": "垂直農業",
+                        "promising (adj.)": "有前途的；有希望的"
+                    },
+                    explanation: "題目考的是形容詞詞義。文章介紹的「垂直農業」是一種為了解決問題而生的「解決方案」。後文描述了它的各種優點，說明它是一個被看好的方法。因此，選項 (A) 'promising' (前景看好的) 最符合文意。其他選項 (B) 失敗的、(C) 歷史性的、(D) 可疑的，皆不符合文章的正面語氣。"
+                }
+            },
+            {
+                number: 140,
+                question: "",
+                options: { A: "Because they", B: "Despite it", C: "As a result", D: "Unless" },
+                answer: "A",
+                analysis: {
+                    translation: "因為它們可以設立在倉庫、貨櫃、甚至摩天大樓中，所以垂直農場比傳統農業使用更少的空間和水。",
+                    vocab: {
+                        "stacked (adj.)": "堆疊的",
+                        "conventional (adj.)": "傳統的"
+                    },
+                    explanation: "題目考的是連接詞和邏輯關係。空格後的句子「可以設立在...」解釋了「為什麼」垂直農場能節省空間。這是一個因果關係。選項 (A) 'Because they' (因為它們) 能建立這種因果關係，且 'they' 指代前文的 'vertical farms'，文法和語意都正確。其他選項 (B) 儘管、(C) 結果、(D) 除非，邏輯上都不通順。"
+                }
+            },
+            {
+                number: 141,
+                question: "Choose the best sentence to fill in the blank.",
+                options: {
+                    A: "This makes it difficult to control pests and diseases.",
+                    B: "The taste of the crops is often considered inferior.",
+                    C: "This approach is especially suitable for land-scarce urban areas.",
+                    D: "However, it requires a significant amount of sunlight."
+                },
+                answer: "C",
+                isSentence: true,
+                analysis: {
+                    translation: "垂直農場比傳統農業使用更少的空間和水。這種方法特別適合土地稀缺的城市地區。",
+                    vocab: {
+                        "land-scarce (adj.)": "土地稀缺的",
+                        "inferior (adj.)": "較差的",
+                        "significant (adj.)": "大量的；顯著的"
+                    },
+                    explanation: "題目考的是句子插入。前一句提到垂直農場「使用更少的空間」。插入的句子應該要能承接這個優點並加以說明。選項 (C) 「這種方法特別適合土地稀缺的城市地區」直接點出了「節省空間」這個優點在城市環境中的重要性，是上下文的最佳連結。選項 (A) 和 (B) 提出負面觀點，與文章的正面基調不符。選項 (D) 提到需要大量陽光，這與垂直農場通常在「室內受控環境」的特點相矛盾。"
+                }
+            },
+            {
+                number: 142,
+                question: "",
+                options: { A: "yield", B: "debt", C: "dispute", D: "labor" },
+                answer: "A",
+                analysis: {
+                    translation: "儘管初始建置成本可能很高，但許多專家認為，其長期效益，如全年穩定的生產和更高的作物產量，超過了其缺點。",
+                    vocab: {
+                        "yield (n.)": "產量；收益",
+                        "debt (n.)": "債務",
+                        "dispute (n.)": "爭議",
+                        "labor (n.)": "勞力"
+                    },
+                    explanation: "題目考的是名詞詞義。在農業的語境下，討論生產的好處時，通常會提到「產量」。選項 (A) 'yield' (產量) 是最適合的名詞。其他選項 (B) 債務、(C) 爭議、(D) 勞力，在此語境中均不合適。"
+                }
+            }
+        ]
+    },
+    // Passage 4: Questions 143-146
+    {
+        part: 6,
+        passageTitle: "Advertisement: Innovate 2025 Conference",
+        passage: `Join us for Innovate 2025, the premier conference for technology and business leaders. This three-day event will be held from November 5-7 at the Grand Convention Center.
+
+This year's conference will feature keynote speeches from ---143.--- industry experts, including visionary CEO Helena Vance and tech guru Kenji Tanaka. Attendees will have the opportunity to participate in interactive workshops, network with peers, and discover the latest trends shaping our future. ---144.--- a wide range of topics from artificial intelligence to sustainable business practices, there is something for everyone.
+
+---145.---. Regular pricing will apply after this date. Don't miss this opportunity to gain valuable insights and ---146.--- your professional network. Visit our website to view the full agenda and secure your spot today!`,
+        questions: [
+            {
+                number: 143,
+                question: "",
+                options: { A: "anonymous", B: "renowned", C: "novice", D: "reluctant" },
+                answer: "B",
+                analysis: {
+                    translation: "今年的會議將邀請著名的行業專家發表主題演講，包括富有遠見的執行長 Helena Vance 和科技大師 Kenji Tanaka。",
+                    vocab: {
+                        "renowned (adj.)": "著名的；有聲望的",
+                        "visionary (adj.)": "有遠見的",
+                        "guru (n.)": "大師；專家",
+                        "anonymous (adj.)": "匿名的"
+                    },
+                    explanation: "題目考的是形容詞詞義。會議廣告為了吸引人，通常會強調演講者的知名度和權威性。後文列舉了 CEO 和科技大師等重量級人物，因此選項 (B) 'renowned' (著名的) 最符合語境。"
+                }
+            },
+            {
+                number: 144,
+                question: "",
+                options: { A: "Covering", B: "Covered", C: "To cover", D: "It covers" },
+                answer: "A",
+                analysis: {
+                    translation: "涵蓋了從人工智慧到永續商業實踐等廣泛主題，每個人都能找到感興趣的內容。",
+                    vocab: {
+                        "keynote speech": "主題演講",
+                        "interactive workshop": "互動式工作坊",
+                        "sustainable (adj.)": "永續的"
+                    },
+                    explanation: "題目考的是分詞構句。這句話的主詞是隱含的 'the conference' 或 'the event'。原句可以理解為 'The event covers a wide range of topics...'。當轉換成分詞構句時，主詞與動詞 'cover' (涵蓋) 是主動關係，因此使用現在分詞 (V-ing)。選項 (A) 'Covering' 是正確的形式。"
+                }
+            },
+            {
+                number: 145,
+                question: "Choose the best sentence to fill in the blank.",
+                options: {
+                    A: "The conference was canceled last year.",
+                    B: "All sessions will be recorded and available online.",
+                    C: "Please make sure to book your hotel room in advance.",
+                    D: "Early-bird registration ends on September 30."
+                },
+                answer: "D",
+                isSentence: true,
+                analysis: {
+                    translation: "早鳥報名將於 9 月 30 日截止。此日期後將適用原價。",
+                    vocab: {
+                        "early-bird registration": "早鳥報名",
+                        "agenda (n.)": "議程",
+                        "secure your spot": "確保您的席位"
+                    },
+                    explanation: "題目考的是句子插入。空格後一句是「此日期後將適用原價」。這句話明確提示了前一句一定與某個有截止日期的優惠價格有關。選項 (D) 「早鳥報名將於 9 月 30 日截止」完美地對應了後文的內容，是唯一正確的答案。其他選項都與後文的「原價」資訊無關。"
+                }
+            },
+            {
+                number: 146,
+                question: "",
+                options: { A: "expand", B: "decline", C: "weaken", D: "restrict" },
+                answer: "A",
+                analysis: {
+                    translation: "不要錯過這個獲得寶貴見解並擴展您專業人脈的機會。",
+                    vocab: {
+                        "insight (n.)": "見解；洞察力",
+                        "expand (v.)": "擴展；擴大",
+                        "professional network": "專業人脈"
+                    },
+                    explanation: "題目考的是動詞詞義。參加會議的目的之一是認識更多同行，即「擴展」人脈。選項 (A) 'expand' (擴展) 是最恰當的動詞。其他選項 (B) 下降、(C) 削弱、(D) 限制，都與參加會議的正面效益相反。"
+                }
+            }
+        ]
+    }
+];
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const testContainer = document.getElementById('test-container');
+    const mainContent = document.getElementById('main-content');
+    const passageTitleEl = document.getElementById('passage-title');
+    const passageContentEl = document.getElementById('passage-content');
+    const questionsContainer = document.getElementById('questions-container');
+    const nextBtn = document.getElementById('next-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const progressIndicator = document.getElementById('progress-indicator');
+    const timerEl = document.getElementById('timer');
+
+    const resultsContainer = document.getElementById('results-container');
+    const scoreEl = document.getElementById('score');
+    const summaryGrid = document.getElementById('summary-grid');
+    const reviewBtn = document.getElementById('review-btn');
+    const analysisContainer = document.getElementById('analysis-container');
+    
+    let currentPassageIndex = 0;
+    let userAnswers = {}; // Store user answers {131: 'A', 132: 'C', ...}
+    let timerInterval;
+
+    function startTimer(duration, display) {
+        let timer = duration, minutes, seconds;
+        timerInterval = setInterval(function () {
+            minutes = parseInt(timer / 60, 10);
+            seconds = parseInt(timer % 60, 10);
+
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            display.textContent = minutes + ":" + seconds;
+
+            if (--timer < 0) {
+                clearInterval(timerInterval);
+                submitTest();
+            }
+        }, 1000);
+    }
+
+    function renderPassage(passageIndex) {
+        const passageData = allQuestions[passageIndex];
+        passageTitleEl.textContent = `Questions ${passageData.questions[0].number}-${passageData.questions[passageData.questions.length - 1].number} refer to the following ${passageData.passageTitle.split(':')[0]}.`;
+        
+        let passageText = passageData.passage;
+        passageData.questions.forEach(q => {
+            passageText = passageText.replace(`---${q.number}.---`, `[__${q.number}__]`);
+        });
+        passageContentEl.textContent = passageText;
+
+        questionsContainer.innerHTML = '';
+        passageData.questions.forEach(q => {
+            const questionEl = document.createElement('div');
+            questionEl.id = `question-${q.number}`;
+            questionEl.className = 'question-container p-4 rounded-lg';
+            
+            let questionHtml = `<p class="font-bold text-lg mb-4 text-gray-800">${q.number}.</p>`;
+
+            const optionsHtml = Object.entries(q.options).map(([key, value]) => `
+                <div class="mt-2">
+                    <input type="radio" id="q${q.number}_${key}" name="q${q.number}" value="${key}" class="hidden">
+                    <label for="q${q.number}_${key}" class="option-label block w-full p-3 border-2 border-gray-300 rounded-lg cursor-pointer">
+                        <span class="font-semibold">${key}.</span> ${value}
+                    </label>
+                </div>
+            `).join('');
+
+            questionEl.innerHTML = questionHtml + optionsHtml;
+            questionsContainer.appendChild(questionEl);
+
+            questionEl.querySelectorAll(`input[name="q${q.number}"]`).forEach(input => {
+                if (userAnswers[q.number] === input.value) {
+                    input.checked = true;
+                }
+                input.addEventListener('change', (e) => {
+                    userAnswers[q.number] = e.target.value;
+                    const currentQNum = parseInt(e.target.name.substring(1));
+                    const nextQ = passageData.questions.find(qu => qu.number === currentQNum + 1);
+                    if (nextQ) {
+                        document.getElementById(`question-${nextQ.number}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            });
+        });
+        
+        updateNavigation();
+    }
+
+    function updateNavigation() {
+        prevBtn.disabled = currentPassageIndex === 0;
+        nextBtn.disabled = currentPassageIndex === allQuestions.length - 1;
+        
+        if (currentPassageIndex === allQuestions.length - 1) {
+            nextBtn.classList.add('hidden');
+            submitBtn.classList.remove('hidden');
+        } else {
+            nextBtn.classList.remove('hidden');
+            submitBtn.classList.add('hidden');
+        }
+
+        progressIndicator.textContent = `題組 ${currentPassageIndex + 1} / ${allQuestions.length}`;
+    }
+
+    function submitTest() {
+        clearInterval(timerInterval);
+        testContainer.classList.add('hidden');
+        resultsContainer.classList.remove('hidden');
+        
+        let score = 0;
+        summaryGrid.innerHTML = '';
+
+        allQuestions.forEach(passage => {
+            passage.questions.forEach(q => {
+                const isCorrect = userAnswers[q.number] === q.answer;
+                if (isCorrect) {
+                    score++;
+                }
+                const summaryItem = document.createElement('div');
+                summaryItem.textContent = q.number;
+                summaryItem.className = `p-2 rounded text-center text-white font-semibold ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`;
+                summaryGrid.appendChild(summaryItem);
+            });
+        });
+
+        const totalQuestions = allQuestions.reduce((acc, p) => acc + p.questions.length, 0);
+        scoreEl.textContent = `${score} / ${totalQuestions}`;
+    }
+
+    function showAnalysis() {
+        testContainer.classList.add('hidden');
+        resultsContainer.classList.add('hidden');
+        analysisContainer.classList.remove('hidden');
+
+        let analysisHtml = `<h2 class="text-3xl font-bold text-center mb-8 text-gray-800">答案與詳解</h2>`;
+
+        allQuestions.forEach(passageData => {
+            let passageText = passageData.passage;
+            passageData.questions.forEach(q => {
+                passageText = passageText.replace(`---${q.number}.---`, `<span class="font-bold text-blue-600">(${q.number})</span>`);
+            });
+
+            analysisHtml += `
+            <div class="mb-12 bg-white p-6 rounded-lg shadow-lg">
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">Passage: ${passageData.passageTitle} (Questions ${passageData.questions[0].number}-${passageData.questions[passageData.questions.length - 1].number})</h3>
+                    <p class="mt-2 text-gray-600 passage-content border-l-4 border-gray-200 pl-4">${passageText}</p>
+                </div>
+                <hr class="my-6">
+            `;
+
+            passageData.questions.forEach(q => {
+                const userAnswer = userAnswers[q.number] || '未作答';
+                const isCorrect = userAnswer === q.answer;
+                const vocabList = Object.entries(q.analysis.vocab).map(([word, def]) => `<li><strong class="text-blue-700">${word}</strong>: ${def}</li>`).join('');
+                
+                let questionContentHtml = '';
+                if (q.isSentence) {
+                    questionContentHtml = q.question;
+                } else {
+                    questionContentHtml = Object.entries(q.options).map(([k,v]) => `${k}. ${v}`).join('<br>');
+                }
+
+                analysisHtml += `
+                <div class="analysis-section p-4 rounded-md mb-4 border border-gray-200">
+                    <h4 class="font-bold text-lg mb-2">Question ${q.number}</h4>
+                    <p class="mb-2">${questionContentHtml}</p>
+                    <div class="space-y-2 text-sm">
+                        <p>你的答案: <span class="font-semibold ${isCorrect ? 'text-green-600' : 'text-red-600'}">${userAnswer}</span></p>
+                        <p>正確答案: <span class="font-semibold text-green-600">${q.answer}</span></p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-300">
+                        <h5 class="font-bold text-base text-gray-900">官方解析</h5>
+                        <p class="mt-2 text-gray-700">${q.analysis.explanation}</p>
+                        <h5 class="font-bold text-base mt-4 text-gray-900">完整句意</h5>
+                        <p class="mt-2 text-gray-700 italic">“${q.analysis.translation}”</p>
+                        <h5 class="font-bold text-base mt-4 text-gray-900">詞彙補充</h5>
+                        <ul class="list-disc list-inside mt-2 text-gray-700">${vocabList}</ul>
+                    </div>
+                </div>`;
+            });
+            analysisHtml += `</div>`;
+        });
+        
+        analysisHtml += `<div class="text-center mb-8"><button id="back-to-top-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">返回頂部</button></div>`;
+
+        analysisContainer.innerHTML = analysisHtml;
+
+        document.getElementById('back-to-top-btn').addEventListener('click', () => {
+             window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    nextBtn.addEventListener('click', () => {
+        if (currentPassageIndex < allQuestions.length - 1) {
+            currentPassageIndex++;
+            renderPassage(currentPassageIndex);
+            window.scrollTo(0, 0);
+        }
+    });
+
+    prevBtn.addEventListener('click', () => {
+        if (currentPassageIndex > 0) {
+            currentPassageIndex--;
+            renderPassage(currentPassageIndex);
+            window.scrollTo(0, 0);
+        }
+    });
+
+    submitBtn.addEventListener('click', () => {
+        submitTest();
+    });
+    
+    reviewBtn.addEventListener('click', () => {
+        showAnalysis();
+        window.scrollTo(0, 0);
+    });
+
+    document.getElementById('next-part-btn').addEventListener('click', () => {
+        // Assuming part 7 will be in a file named part7.html
+        window.location.href = 'part7.html';
+    });
+
+    // Initial load
+    renderPassage(currentPassageIndex);
+    startTimer(10 * 60, timerEl);
+});
+</script>
+
+</body>
+</html>
