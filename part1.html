@@ -469,8 +469,6 @@
             const currentQuestionData = currentQuestionGroup.questions[0]; // Part 1 always has 1 question per group
 
             currentQuestionNumberSpan.textContent = currentQuestionIndex + 1;
-            // For Part 1, questionText element should remain empty, as options are the statements.
-            // Ensure the element exists and its content is cleared.
             if (questionText) { 
                 questionText.textContent = ""; 
             }
@@ -486,35 +484,34 @@
             currentQuestionData.options.forEach((option, index) => {
                 const optionDiv = document.createElement('div');
                 optionDiv.classList.add('question-option');
-                // For Part 1, options are the statements to evaluate, no A. B. C. D. in front
-                const optionText = `${String.fromCharCode(65 + index)}. ${option}`; // Add A. B. C. D. for display
+                const optionLetter = String.fromCharCode(65 + index);
+                // Initially, only show the letter (e.g., "(A)"). The full text is hidden.
                 optionDiv.innerHTML = `<input type="radio" name="question-${currentQuestionIndex}" id="option-${currentQuestionIndex}-${index}" value="${option}" class="mr-3 cursor-pointer">
-                                       <label for="option-${currentQuestionIndex}-${index}" class="cursor-pointer flex-grow">${optionText}</label>`;
+                                       <label for="option-${currentQuestionIndex}-${index}" class="cursor-pointer flex-grow">(${optionLetter})</label>`;
                 optionDiv.addEventListener('click', () => {
-                    // Visually select the option
-                    document.querySelectorAll(`#options-container .question-option`).forEach(opt => opt.classList.remove('selected'));
-                    optionDiv.classList.add('selected');
-                    // Select the radio button
-                    optionDiv.querySelector('input[type="radio"]').checked = true;
-                    userAnswers[currentQuestionIndex] = option; // Store the selected answer text
+                    // This click listener now only handles visual selection
+                    if (!optionDiv.classList.contains('disabled')) {
+                        document.querySelectorAll(`#options-container .question-option`).forEach(opt => opt.classList.remove('selected'));
+                        optionDiv.classList.add('selected');
+                        optionDiv.querySelector('input[type="radio"]').checked = true;
+                    }
                 });
                 optionsContainer.appendChild(optionDiv);
             });
 
             // Restore user's previous selection if any
             if (userAnswers[currentQuestionIndex] !== null) {
-                const selectedOptionValue = userAnswers[currentQuestionIndex];
-                const radioInput = optionsContainer.querySelector(`input[value="${selectedOptionValue}"]`);
-                if (radioInput) {
-                    radioInput.checked = true;
-                    radioInput.closest('.question-option').classList.add('selected');
+                // If question was answered, reveal texts and apply styles
+                revealAndStyleAnswers();
+                
+                const selectedRadio = optionsContainer.querySelector(`input[value="${userAnswers[currentQuestionIndex]}"]`);
+                if (selectedRadio) {
+                    selectedRadio.checked = true;
                 }
-                // If an answer was previously selected, options should remain disabled until explanation is hidden
-                optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
-                optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.add('disabled'));
-                submitAnswerBtn.style.display = 'none'; // Hide submit button
-                showExplanationBtn.style.display = 'block'; // Show explanation button
-                nextBtn.style.display = 'block'; // Show next button
+
+                submitAnswerBtn.style.display = 'none';
+                showExplanationBtn.style.display = 'block';
+                nextBtn.style.display = 'block';
             } else {
                 // If no answer selected, ensure options are enabled for interaction
                 optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = false);
@@ -537,6 +534,36 @@
             statusMessage.style.display = 'none';
         }
 
+        // New helper function to reveal text and apply styles
+        function revealAndStyleAnswers() {
+            const userAnswer = userAnswers[currentQuestionIndex];
+            if (!userAnswer) return;
+
+            const currentQuestionData = allQuestions[currentQuestionIndex].questions[0];
+            const optionsDivs = optionsContainer.querySelectorAll('.question-option');
+
+            optionsDivs.forEach(optionDiv => {
+                const radio = optionDiv.querySelector('input[type="radio"]');
+                const label = optionDiv.querySelector('label');
+                const optionFullText = radio.value;
+                
+                // Reveal the full text
+                const optionLetter = label.textContent.trim().replace(/[()]/g, '');
+                label.textContent = `(${optionLetter}) ${optionFullText}`;
+
+                // Apply correct/incorrect styling
+                if (optionFullText === currentQuestionData.correctAnswer) {
+                    optionDiv.classList.add('correct');
+                } else if (optionFullText === userAnswer) {
+                    optionDiv.classList.add('incorrect');
+                }
+
+                // Disable interaction
+                radio.disabled = true;
+                optionDiv.classList.add('disabled');
+            });
+        }
+
         function submitAnswer() {
             const currentQuestionGroup = allQuestions[currentQuestionIndex];
             const currentQuestionData = currentQuestionGroup.questions[0];
@@ -551,25 +578,13 @@
             const userAnswer = selectedRadio.value;
             userAnswers[currentQuestionIndex] = userAnswer; // Store the answer
 
-            // Disable options after submission
-            optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
-            optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => optionDiv.classList.add('disabled'));
+            // Reveal text and apply styles
+            revealAndStyleAnswers();
 
-
-            // Show correct/incorrect feedback
-            const optionsDivs = optionsContainer.querySelectorAll('.question-option');
-            optionsDivs.forEach(optionDiv => {
-                const optionText = optionDiv.querySelector('label').textContent.substring(3); // Get text after "A. "
-                if (optionText === currentQuestionData.correctAnswer) {
-                    optionDiv.classList.add('correct');
-                } else if (optionText === userAnswer) {
-                    optionDiv.classList.add('incorrect');
-                }
-            });
-
-            submitAnswerBtn.style.display = 'none'; // Hide submit button
-            showExplanationBtn.style.display = 'block'; // Show explanation button
-            nextBtn.style.display = 'block'; // Show next button
+            // Hide submit button and show next/explanation buttons
+            submitAnswerBtn.style.display = 'none';
+            showExplanationBtn.style.display = 'block';
+            nextBtn.style.display = 'block';
 
             if (userAnswer === currentQuestionData.correctAnswer) {
                 showStatusMessage('答案正確！', 'success');
@@ -589,18 +604,9 @@
             analysisExplanation.textContent = currentQuestionData.explanation.analysis;
             explanationDisplay.style.display = 'block';
 
-            // Ensure options are disabled and colored correctly
-            optionsContainer.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
-            const optionsDivs = optionsContainer.querySelectorAll('.question-option');
-            optionsDivs.forEach(optionDiv => {
-                const optionText = optionDiv.querySelector('label').textContent.substring(3);
-                if (optionText === currentQuestionData.correctAnswer) {
-                    optionDiv.classList.add('correct');
-                } else if (optionText === userAnswers[currentQuestionIndex] && optionText !== currentQuestionData.correctAnswer) {
-                    optionDiv.classList.add('incorrect');
-                }
-                optionDiv.classList.remove('selected'); // Remove selected class
-                optionDiv.classList.add('disabled'); // Ensure all options are visually disabled
+            // Remove the 'selected' highlight as it's now redundant
+            optionsContainer.querySelectorAll('.question-option').forEach(optionDiv => {
+                optionDiv.classList.remove('selected');
             });
 
             // Hide explanation button after showing
