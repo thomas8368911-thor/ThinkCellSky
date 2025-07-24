@@ -222,6 +222,7 @@
         let speechUtterance = null;
         let isSpeaking = false;
         let currentOptionIndex = 0; // To track which option is being spoken for sequential playback
+        let selectedVoice = null; // <--- 新增這一行
 
         // All TOEIC Part 3 Questions (13 conversation groups, 3 questions each = 39 questions)
         const allQuestions = [
@@ -1034,6 +1035,9 @@
 
             speechUtterance = new SpeechSynthesisUtterance(text);
             speechUtterance.lang = 'en-US';
+            if (selectedVoice) { // <--- 新增這一段 if 判斷
+                speechUtterance.voice = selectedVoice;
+            }
 
             speechUtterance.onstart = () => {
                 isSpeaking = true;
@@ -1066,8 +1070,6 @@
                 playOptionsBtn.textContent = '播放選項';
                 playOptionsBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
                 playOptionsBtn.classList.add('bg-green-500', 'hover:bg-green-700');
-
-                currentOptionIndex = 0; // Reset for next play
 
                 if (onEndCallback) {
                     onEndCallback();
@@ -1158,7 +1160,7 @@
                             playOptionsBtn.textContent = '播放選項';
                             playOptionsBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
                             playOptionsBtn.classList.add('bg-green-500', 'hover:bg-green-700');
-                            currentOptionIndex = 0;
+                            currentOptionIndex = 0; // 重置選項索引
                             if (submitAnswerBtn.style.display === 'block') {
                                 setInteractionState(false);
                             } else {
@@ -1168,7 +1170,7 @@
                             }
                         }
                     };
-                    currentOptionIndex = 0;
+                    currentOptionIndex = 0; // 確保在開始播放前重置
                     speakNextOption();
                 }
             }
@@ -1395,8 +1397,49 @@
     
         });
 
+        // --- 新增: 選擇最佳語音的函式 ---
+        function selectBestVoice() {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length === 0) return;
+
+            // 定義偏好的語音關鍵字 (按優先順序排列)
+            const preferredVoices = [
+                'Online', // Edge 的高品質線上語音
+                'Natural',// Edge 的高品質線上語音
+                'Google US English', // Chrome 的高品質語音
+                'Siri'    // Safari 的高品質語音
+            ];
+
+            let bestVoice = null;
+
+            // 根據偏好清單尋找最佳語音
+            for (const keyword of preferredVoices) {
+                bestVoice = voices.find(voice => voice.lang === 'en-US' && voice.name.includes(keyword));
+                if (bestVoice) break; // 找到就停止搜尋
+            }
+
+            // 如果沒有找到偏好的語音，就選擇第一個可用的美國英語語音作為備用
+            if (!bestVoice) {
+                bestVoice = voices.find(voice => voice.lang === 'en-US');
+            }
+
+            selectedVoice = bestVoice;
+            if (selectedVoice) {
+                console.log('Selected voice for Part 3:', selectedVoice.name);
+            } else {
+                console.log('No suitable English voice found for Part 3.');
+            }
+        }
+
         // Initial load
-        document.addEventListener('DOMContentLoaded', loadQuestion);
+        document.addEventListener('DOMContentLoaded', () => {
+            // 語音是異步載入的，需要這樣處理
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = selectBestVoice;
+            }
+            selectBestVoice(); // 嘗試立即選擇
+            loadQuestion();
+        });
 
         // Cancel speech if user navigates away or closes tab
         window.addEventListener('beforeunload', () => {
