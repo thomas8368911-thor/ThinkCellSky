@@ -628,6 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         analysisHtml += `
             <div class="text-center mb-8 flex justify-center space-x-4">
+                <button id="go-to-part-btn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">回到總表</button>
                 <button id="restart-test-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">重新測驗</button>
                 <button id="back-to-top-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">返回頂部</button>
                 <button id="go-to-part7-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">前往 Part 7</button>
@@ -645,6 +646,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('go-to-part7-btn').addEventListener('click', () => {
             window.location.href = 'part7.html'; // Navigate to part7.html
+        });
+
+        document.getElementById('go-to-part-btn').addEventListener('click', () => {
+            window.location.href = 'part.html'; // Navigate to part.html
         });
     }
 
