@@ -626,12 +626,25 @@ document.addEventListener('DOMContentLoaded', () => {
             analysisHtml += `</div>`;
         });
         
-        analysisHtml += `<div class="text-center mb-8"><button id="back-to-top-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">返回頂部</button></div>`;
+        analysisHtml += `
+            <div class="text-center mb-8 flex justify-center space-x-4">
+                <button id="restart-test-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">重新測驗</button>
+                <button id="back-to-top-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">返回頂部</button>
+                <button id="go-to-part7-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">前往 Part 7</button>
+            </div>`;
 
         analysisContainer.innerHTML = analysisHtml;
 
         document.getElementById('back-to-top-btn').addEventListener('click', () => {
              window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        document.getElementById('restart-test-btn').addEventListener('click', () => {
+            window.location.reload(); // Reload the page to restart the test
+        });
+
+        document.getElementById('go-to-part7-btn').addEventListener('click', () => {
+            window.location.href = 'part7.html'; // Navigate to part7.html
         });
     }
 
